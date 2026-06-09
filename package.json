@@ -1,0 +1,16 @@
+{
+  "name": "smartdrive-ai-backend",
+  "version": "1.0.0",
+  "description": "RTO Driving Test Evaluation & License Eligibility System Backend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "sqlite3": "^5.1.6"
+  },
+  "author": "SmartDrive AI Govt System",
+  "license": "ISC"
+}
