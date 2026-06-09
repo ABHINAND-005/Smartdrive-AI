@@ -138,10 +138,4 @@ To improve transparency, reduce manual errors, and provide a fair and automated 
 
 ---
 
-## 👨‍💻 Developed By
 
-Abhinand A
-
-B.Tech Information Technology
-
-Cochin University of Science and Technology (CUSAT)
