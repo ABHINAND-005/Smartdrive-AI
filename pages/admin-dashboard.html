@@ -1,0 +1,110 @@
+<style>
+/* Admin Dashboard Performance Animations */
+#admin-metric-passrate-bar {
+  transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+</style>
+
+<!-- Admin Stats Cards -->
+<div class="grid-cols-4">
+  <div class="card stat-card">
+    <div class="stat-icon bg-primary-light"><i class="fa-solid fa-users"></i></div>
+    <div class="stat-info">
+      <span class="stat-lbl">Total Candidates</span>
+      <span class="stat-val" id="admin-stat-total">148</span>
+    </div>
+  </div>
+  <div class="card stat-card">
+    <div class="stat-icon bg-success-light"><i class="fa-solid fa-circle-check"></i></div>
+    <div class="stat-info">
+      <span class="stat-lbl">Passed Candidates</span>
+      <span class="stat-val" id="admin-stat-passed">104</span>
+    </div>
+  </div>
+  <div class="card stat-card">
+    <div class="stat-icon bg-danger-light"><i class="fa-solid fa-triangle-exclamation"></i></div>
+    <div class="stat-info">
+      <span class="stat-lbl">Failed Candidates</span>
+      <span class="stat-val" id="admin-stat-failed">38</span>
+    </div>
+  </div>
+  <div class="card stat-card">
+    <div class="stat-icon bg-warning-light"><i class="fa-solid fa-hourglass-half"></i></div>
+    <div class="stat-info">
+      <span class="stat-lbl">Pending Review</span>
+      <span class="stat-val" id="admin-stat-pending">6</span>
+    </div>
+  </div>
+</div>
+
+<!-- Pass rates and activity logs -->
+<div class="grid-cols-2-1">
+  
+  <!-- Recent tests evaluations list -->
+  <div class="card">
+    <div class="card-title-bar">
+      <h3>Recent Test Evaluations</h3>
+      <button class="btn btn-secondary btn-sm" onclick="app.route('admin-candidates')">
+        Manage Candidates <i class="fa-solid fa-arrow-right"></i>
+      </button>
+    </div>
+
+    <div class="table-responsive">
+      <table class="rto-table">
+        <thead>
+          <tr>
+            <th>Candidate</th>
+            <th>App Number</th>
+            <th>Test Date</th>
+            <th>AI Score</th>
+            <th>Decision</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="admin-dashboard-recent-table">
+          <!-- Rendered dynamically -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Pass Rate summary & accuracy -->
+  <div style="display:flex; flex-direction:column; gap:20px;">
+    <div class="card">
+      <h3 style="margin-bottom:16px;">RTO Performance Metrics</h3>
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:6px;">
+            <span>Pass Percentage</span>
+            <strong id="admin-metric-passrate">70.2%</strong>
+          </div>
+          <div style="height:8px; background-color:var(--bg-main); border-radius:4px; overflow:hidden;">
+            <div style="height:100%; background-color:var(--success); width:70%" id="admin-metric-passrate-bar"></div>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:6px;">
+            <span>AI Accuracy Confidence</span>
+            <strong>97.8%</strong>
+          </div>
+          <div style="height:8px; background-color:var(--bg-main); border-radius:4px; overflow:hidden;">
+            <div style="height:100%; background-color:var(--primary); width:97.8%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="display:flex; flex-direction:column; justify-content:space-between;">
+      <div>
+        <h3 style="margin-bottom:12px;">Evaluation Center</h3>
+        <p style="font-size:0.85rem; color:var(--text-sub);">Connected to RTO Kasaragod Sub-Station (Track 4).</p>
+      </div>
+      <div style="margin-top:20px; display:flex; gap:12px;">
+        <button class="btn btn-primary" style="width:100%" onclick="app.route('admin-video-evaluation')">
+          <i class="fa-solid fa-cloud-arrow-up"></i> Upload Test Video
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

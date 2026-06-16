@@ -1,0 +1,71 @@
+<style>
+/* Override Button Active Styles */
+.btn-secondary.active {
+  background-color: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+</style>
+
+<div class="grid-cols-2-1">
+  
+  <!-- Result overview card -->
+  <div class="card">
+    <div class="card-title-bar">
+      <h3>Generated AI Result Assessment</h3>
+      <span class="badge badge-warning" id="override-candidate-badge">APP-2026-003</span>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:20px;">
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; background-color:var(--bg-main); padding:20px; border-radius:var(--radius-md); border:1px solid var(--border-color);">
+        <div style="text-align:center;">
+          <span style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:4px;">AI Calculated Score</span>
+          <strong style="font-size:2rem; color:var(--text-main)" id="override-ai-score">82</strong>
+        </div>
+        <div style="text-align:center; border-left:1px solid var(--border-color); border-right:1px solid var(--border-color)">
+          <span style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:4px;">AI Decision</span>
+          <span class="badge badge-success" id="override-ai-decision">PASSED</span>
+        </div>
+        <div style="text-align:center;">
+          <span style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:4px;">Confidence Level</span>
+          <strong style="font-size:1.8rem; color:var(--text-main)" id="override-ai-confidence">95.4%</strong>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Manual Officer Remarks (Optional override explanation)</label>
+        <textarea class="form-control" style="padding:12px; height:100px; resize:none;" id="override-remarks" placeholder="Add manual oversight logs or approval justification..."></textarea>
+      </div>
+
+      <div style="display:flex; gap:16px;">
+        <div style="flex:1;">
+          <label style="font-size:0.85rem; font-weight:600; color:var(--text-sub); display:block; margin-bottom:8px;">Officer Overrided Status</label>
+          <div style="display:flex; gap:10px;">
+            <button class="btn btn-secondary active" style="flex:1; border-color:var(--success); color:var(--success)" id="override-btn-pass" onclick="app.setOverrideStatus('Passed')">
+              <i class="fa-solid fa-circle-check"></i> PASS
+            </button>
+            <button class="btn btn-secondary" style="flex:1;" id="override-btn-fail" onclick="app.setOverrideStatus('Failed')">
+              <i class="fa-solid fa-circle-xmark"></i> FAIL
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid var(--border-color); padding-top:20px; display:flex; justify-content:flex-end; gap:12px;">
+        <button class="btn btn-secondary" onclick="app.route('admin-candidates')">Cancel</button>
+        <button class="btn btn-primary" onclick="app.saveOverrideResult()">
+          <i class="fa-solid fa-stamp"></i> Publish Final Result
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Side Audit Check -->
+  <div class="card" style="display:flex; flex-direction:column; gap:16px;">
+    <h3>Decisive Violations Logs</h3>
+    <div style="display:flex; flex-direction:column; gap:10px;" id="override-violations-summary-list">
+      <!-- Rendered dynamically -->
+    </div>
+  </div>
+
+</div>

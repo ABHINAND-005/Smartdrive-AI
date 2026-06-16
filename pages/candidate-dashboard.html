@@ -1,0 +1,154 @@
+<style>
+/* Circular Driving Score Progress */
+.circle-progress-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 10px 0;
+}
+
+.circle-svg {
+  width: 160px;
+  height: 160px;
+  transform: rotate(-90deg);
+}
+
+.circle-bg {
+  fill: none;
+  stroke: var(--border-color);
+  stroke-width: 14;
+}
+
+.circle-bar {
+  fill: none;
+  stroke-width: 14;
+  stroke-linecap: round;
+  stroke-dasharray: 440;
+  stroke-dashoffset: 440;
+  transition: stroke-dashoffset 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.circle-score-val {
+  position: absolute;
+  top: calc(50% - 24px);
+  text-align: center;
+  font-family: var(--font-title);
+}
+
+.score-num {
+  font-size: 2.5rem;
+  font-weight: 850;
+  color: var(--text-main);
+  line-height: 1;
+}
+
+.score-lbl {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+</style>
+
+<div class="grid-cols-3">
+  <div class="card stat-card">
+    <div class="stat-icon bg-primary-light"><i class="fa-solid fa-address-card"></i></div>
+    <div class="stat-info">
+      <span class="stat-lbl" data-lang="db_ll_no">Learner's License No</span>
+      <span class="stat-val" id="db-ll-number">KL-14/10452/2026</span>
+    </div>
+  </div>
+  <div class="card stat-card">
+    <div class="stat-icon bg-success-light" id="db-status-bg"><i class="fa-solid fa-circle-check"></i></div>
+    <div class="stat-info">
+      <span class="stat-lbl" data-lang="db_test_status">Test Status</span>
+      <span class="stat-val" id="db-test-status">Passed</span>
+    </div>
+  </div>
+  <div class="card stat-card">
+    <div class="stat-icon bg-warning-light" id="db-eligibility-bg"><i class="fa-solid fa-id-card"></i></div>
+    <div class="stat-info">
+      <span class="stat-lbl" data-lang="db_license_status">License Eligibility</span>
+      <span class="stat-val" style="font-size:1.35rem;" id="db-license-eligibility">Eligible</span>
+    </div>
+  </div>
+</div>
+
+<div class="grid-cols-2-1">
+  <!-- Result Summary Card -->
+  <div class="card">
+    <div class="card-title-bar">
+      <h3 data-lang="db_result_card_title">Driving Evaluation Summary</h3>
+      <span class="badge badge-primary" id="db-eval-date">08 Jun 2026</span>
+    </div>
+    
+    <div style="display: flex; flex-direction:column; gap:20px;">
+      <div style="display:flex; align-items:center; gap:24px;">
+        <div class="circle-progress-container">
+          <svg class="circle-svg">
+            <circle class="circle-bg" cx="80" cy="80" r="70"></circle>
+            <circle class="circle-bar" id="score-circle-bar" cx="80" cy="80" r="70" stroke="var(--success)"></circle>
+          </svg>
+          <div class="circle-score-val">
+            <span class="score-num" id="db-score-val">88</span>
+            <div class="score-lbl" data-lang="db_score_lbl">Score</div>
+          </div>
+        </div>
+
+        <div style="flex:1;">
+          <h4 style="font-size:1.25rem; margin-bottom: 6px;" id="db-score-assessment">Safe Driving Performance</h4>
+          <p style="font-size:0.9rem; color:var(--text-sub); margin-bottom:12px;" data-lang="db_score_sub">
+            Your test video was processed automatically. AI detected lane disciplines, indicator setups, and vehicle control parameters.
+          </p>
+          <div style="display:flex; gap:16px;">
+            <div>
+              <span style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; font-weight:700;">AI Confidence</span>
+              <div style="font-weight:700; color:var(--text-main)" id="db-ai-confidence">96.5%</div>
+            </div>
+            <div style="border-left: 1px solid var(--border-color); padding-left:16px;">
+              <span style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; font-weight:700;" data-lang="db_officer_approval">Officer Approval</span>
+              <div style="font-weight:700; color:var(--text-main)" id="db-officer-approval">Approved</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid var(--border-color); padding-top:20px; display:flex; gap:12px;">
+        <button class="btn btn-secondary" onclick="app.route('candidate-results')">
+          <i class="fa-solid fa-receipt"></i> <span data-lang="db_btn_breakdown">View Full Breakdown</span>
+        </button>
+        <button class="btn btn-primary" onclick="app.route('candidate-video-review')">
+          <i class="fa-solid fa-play"></i> <span data-lang="db_btn_review">Review Path Video</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Info / Notifications panel -->
+  <div class="card" style="display:flex; flex-direction:column;">
+    <div class="card-title-bar">
+      <h3 data-lang="db_quick_actions">Quick Actions</h3>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:12px; flex:1;">
+      <button class="btn btn-secondary" style="justify-content: flex-start;" onclick="app.route('candidate-eligibility')">
+        <i class="fa-solid fa-download text-primary"></i> <span data-lang="db_dl_reports">Download Reports PDF</span>
+      </button>
+      <button class="btn btn-secondary" style="justify-content: flex-start;" onclick="app.route('candidate-verification')">
+        <i class="fa-solid fa-id-card-clip text-success"></i> <span data-lang="db_upload_docs">Upload Identity Documents</span>
+      </button>
+      <button class="btn btn-secondary" style="justify-content: flex-start;" id="db-retest-nav-btn" onclick="app.route('candidate-retest')">
+        <i class="fa-solid fa-calendar-days text-warning"></i> <span data-lang="db_book_retest">Schedule Retest Slot</span>
+      </button>
+      
+      <div style="margin-top:auto; padding:12px; background:var(--primary-light); border-radius:var(--radius-md); border: 1px solid var(--primary-glow); display:flex; gap:10px;">
+        <i class="fa-solid fa-circle-info text-primary" style="margin-top:2px;"></i>
+        <div style="font-size:0.8rem; color:var(--primary)">
+          <strong>RTO Notice:</strong> Keep your Learners License original physically with you when reporting to the center.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,21 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Candidates collection rules
+    match /candidates/{candidateId} {
+      allow read, write: if true;
+    }
+    
+    // Audit logs tracking rules
+    match /audit_logs/{logId} {
+      allow read, write: if true;
+    }
+    
+    // Notifications alerts rules
+    match /notifications/{notifyId} {
+      allow read, write: if true;
+    }
+    
+  }
+}

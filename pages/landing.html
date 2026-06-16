@@ -1,0 +1,300 @@
+<style>
+/* Landing Page Styles */
+#landing-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: radial-gradient(circle at 10% 20%, var(--primary-glow) 0%, transparent 40%),
+              radial-gradient(circle at 90% 80%, var(--success-glow) 0%, transparent 40%),
+              var(--bg-main);
+}
+
+.landing-header {
+  height: 80px;
+  padding: 0 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.logo-tag {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: var(--success-light);
+  color: var(--success);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  margin-left: 4px;
+}
+
+.landing-nav {
+  display: flex;
+  gap: 24px;
+}
+
+.landing-hero {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  align-items: center;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 60px 40px;
+  gap: 60px;
+}
+
+.hero-text h1 {
+  font-size: 3.5rem;
+  line-height: 1.15;
+  margin-bottom: 24px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--text-main) 60%, var(--primary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero-text p {
+  font-size: 1.125rem;
+  color: var(--text-sub);
+  margin-bottom: 40px;
+  line-height: 1.6;
+}
+
+.hero-ctas {
+  display: flex;
+  gap: 16px;
+}
+
+.hero-image {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.hero-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur));
+  border-radius: var(--radius-lg);
+  padding: 30px;
+  box-shadow: var(--shadow-xl);
+  width: 100%;
+  max-width: 460px;
+  position: relative;
+}
+
+.hero-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 30px;
+}
+
+.hero-stat-item {
+  background: rgba(255, 255, 255, 0.4);
+  padding: 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+[data-theme="dark"] .hero-stat-item {
+  background: rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+.hero-stat-val {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--primary);
+  font-family: var(--font-title);
+}
+
+.hero-stat-lbl {
+  font-size: 0.8rem;
+  color: var(--text-sub);
+}
+
+.landing-features {
+  background-color: var(--bg-card);
+  padding: 80px 40px;
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.section-title {
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto 50px auto;
+}
+
+.section-title h2 {
+  font-size: 2.25rem;
+  margin-bottom: 16px;
+  color: var(--text-main);
+}
+
+.section-title p {
+  color: var(--text-sub);
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.feature-card {
+  padding: 30px;
+  background-color: var(--bg-main);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary-glow);
+}
+
+.feature-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: var(--radius-md);
+  background-color: var(--primary-light);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+}
+
+.feature-card:nth-child(2) .feature-icon {
+  background-color: var(--success-light);
+  color: var(--success);
+}
+
+.feature-card:nth-child(3) .feature-icon {
+  background-color: var(--warning-light);
+  color: var(--warning);
+}
+
+.feature-card h3 {
+  font-size: 1.25rem;
+  margin-bottom: 12px;
+}
+
+.feature-card p {
+  color: var(--text-sub);
+  font-size: 0.9rem;
+}
+
+.landing-footer {
+  text-align: center;
+  padding: 30px 40px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  border-top: 1px solid var(--border-color);
+}
+</style>
+
+<div id="landing-page">
+  <header class="landing-header">
+    <div class="logo">
+      <i class="fa-solid fa-microchip"></i> SmartDrive <span>AI</span>
+      <span class="logo-tag">RTO Govt</span>
+    </div>
+    <div class="landing-nav">
+      <button class="btn btn-secondary" onclick="app.showScreen('screen-user-login')">
+        <i class="fa-solid fa-user-check"></i> Candidate Login
+      </button>
+      <button class="btn btn-primary" onclick="app.showScreen('screen-admin-login')">
+        <i class="fa-solid fa-user-shield"></i> Officer Portal
+      </button>
+    </div>
+  </header>
+
+  <main class="landing-hero animate-fade">
+    <div class="hero-text">
+      <h1>Automated AI driving test evaluation.</h1>
+      <p>
+        Welcome to the SmartDrive AI system, implemented by the State Transport Department. 
+        We utilize high-precision cameras, computer vision, and deep learning algorithms to track path trajectory, 
+        detect driving violations, and instantly evaluate driving license eligibility with full transparency.
+      </p>
+      <div class="hero-ctas">
+        <button class="btn btn-primary btn-lg" onclick="app.showScreen('screen-user-login')">
+          <i class="fa-solid fa-file-invoice"></i> Check My Eligibility
+        </button>
+        <button class="btn btn-secondary btn-lg" onclick="app.showScreen('screen-admin-login')">
+          <i class="fa-solid fa-shield-halved"></i> RTO Admin Console
+        </button>
+      </div>
+    </div>
+
+    <div class="hero-image">
+      <div class="hero-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+          <span class="badge badge-success"><i class="fa-solid fa-circle-check"></i> AI Certified Track</span>
+          <span style="font-size:0.85rem; color:var(--text-sub);"><i class="fa-solid fa-tower-broadcast text-danger" style="animation: pulse 1.5s infinite"></i> Live Track 4</span>
+        </div>
+        <h3 style="margin-bottom:12px; font-size:1.4rem;">SmartTrack Statistics</h3>
+        <p style="font-size:0.9rem; color:var(--text-sub); margin-bottom:20px;">Real-time computer vision monitoring across 14 RTO test track locations.</p>
+        
+        <div class="hero-stats">
+          <div class="hero-stat-item">
+            <span class="hero-stat-val" id="landing-stat-total">14,250+</span>
+            <span class="hero-stat-lbl">Tests Evaluated</span>
+          </div>
+          <div class="hero-stat-item">
+            <span class="hero-stat-val" style="color:var(--success)" id="landing-stat-rate">72.4%</span>
+            <span class="hero-stat-lbl">Avg Pass Rate</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <section class="landing-features">
+    <div class="section-title">
+      <h2>State-of-the-Art Evaluation</h2>
+      <p>Reducing manual subjectivity and enhancing safety using advanced deep learning overlays.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fa-solid fa-eye"></i></div>
+        <h3>Smart Path Tracking</h3>
+        <p>High-speed computer vision models map boundaries, tracking reverse maneuvers and gradient stops down to centimeters.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <h3>Instant Violations Detection</h3>
+        <p>Automated boundary crossing, vehicle stall indicators, indicators miss-usage, and reverse speed check alerts logged instantly.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fa-solid fa-stamp"></i></div>
+        <h3>Official Licensing QR</h3>
+        <p>Automatically triggers cryptographically verifiable PDF driving scores and QR codes for seamless licensing.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="landing-footer">
+    <p>&copy; 2026 Ministry of Road Transport & Highways, SmartDrive AI Initiative. All Rights Reserved.</p>
+  </footer>
+</div>

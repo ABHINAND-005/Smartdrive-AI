@@ -1,0 +1,141 @@
+<style>
+/* Authentication Pages Styles */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: radial-gradient(circle at top right, var(--primary-glow), transparent),
+              var(--bg-main);
+  padding: 20px;
+}
+
+.auth-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 40px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: var(--shadow-xl);
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.auth-header .logo {
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.auth-header h2 {
+  font-size: 1.5rem;
+  color: var(--text-main);
+  margin-bottom: 8px;
+}
+
+.auth-header p {
+  color: var(--text-sub);
+  font-size: 0.9rem;
+}
+
+.form-group {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-sub);
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-wrapper i {
+  position: absolute;
+  left: 14px;
+  color: var(--text-muted);
+}
+
+.form-control {
+  width: 100%;
+  padding: 12px 14px 12px 42px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.form-control:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+  background-color: var(--bg-card);
+}
+
+.auth-footer {
+  text-align: center;
+  margin-top: 24px;
+  font-size: 0.85rem;
+  color: var(--text-sub);
+}
+
+.auth-footer p {
+  margin-bottom: 8px;
+}
+
+.auth-footer a {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.auth-footer a:hover {
+  text-decoration: underline;
+}
+</style>
+
+<div class="auth-page candidate-auth-page">
+  <div class="auth-card candidate-auth-card animate-fade">
+    <div class="auth-header">
+      <div class="logo">
+        <i class="fa-solid fa-car-side"></i> SmartDrive <span>AI</span>
+      </div>
+      <h2>Candidate Login</h2>
+      <p>Enter your details to view test results and download reports</p>
+    </div>
+    <form onsubmit="app.handleUserLogin(event)">
+      <div class="form-group">
+        <label for="user-app-no">Application Number</label>
+        <div class="input-wrapper">
+          <i class="fa-solid fa-file-lines"></i>
+          <input type="text" id="user-app-no" class="form-control" placeholder="APP-2026-001" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="user-dob">Date of Birth</label>
+        <div class="input-wrapper">
+          <i class="fa-solid fa-calendar-days"></i>
+          <input type="date" id="user-dob" class="form-control" required>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
+        <i class="fa-solid fa-right-to-bracket"></i> Authenticate Details
+      </button>
+    </form>
+    <div class="auth-footer">
+      <p>Officer Login? <a href="#" onclick="app.showScreen('screen-admin-login')">Go to Portal</a></p>
+      <p><a href="#" onclick="app.showScreen('screen-landing')"><i class="fa-solid fa-arrow-left"></i> Back to Home</a></p>
+    </div>
+  </div>
+</div>

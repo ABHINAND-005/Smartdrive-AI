@@ -1,0 +1,42 @@
+<style>
+/* Candidate CRUD Specific Styles */
+#admin-candidate-search:focus {
+  border-color: var(--primary);
+}
+</style>
+
+<div class="card">
+  <div class="card-title-bar">
+    <h3>Candidate Registry</h3>
+    <div style="display:flex; gap:12px;">
+      <div class="input-wrapper" style="width:240px;">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="admin-candidate-search" class="form-control" placeholder="Search Candidate..." oninput="app.searchCandidates(this.value)" style="padding-top:8px; padding-bottom:8px;">
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="app.openAddCandidateModal()">
+        <i class="fa-solid fa-user-plus"></i> Add Candidate
+      </button>
+    </div>
+  </div>
+
+  <!-- Main CRUD Table -->
+  <div class="table-responsive">
+    <table class="rto-table">
+      <thead>
+        <tr>
+          <th>Full Name</th>
+          <th>App Number</th>
+          <th>DOB</th>
+          <th>LL Number</th>
+          <th>Mobile</th>
+          <th>Test Date</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="admin-candidates-crud-table">
+        <!-- Dynamic rendering -->
+      </tbody>
+    </table>
+  </div>
+</div>

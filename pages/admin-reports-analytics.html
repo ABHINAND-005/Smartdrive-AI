@@ -1,0 +1,103 @@
+<style>
+/* Heatmap container */
+.heatmap-canvas-container {
+  width: 100%;
+  aspect-ratio: 1.5;
+  background-color: var(--bg-main);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  position: relative;
+  overflow: hidden;
+}
+
+.heatmap-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.heat-point {
+  transition: r 0.2s ease, opacity 0.2s ease;
+}
+
+.heat-point:hover {
+  r: 45px;
+  opacity: 0.9;
+}
+</style>
+
+<div class="grid-cols-2">
+  
+  <!-- Analytics chart 1 -->
+  <div class="card">
+    <h3 style="margin-bottom:16px;">Monthly Pass / Fail Rate Trend</h3>
+    <div style="position:relative; height:240px;">
+      <canvas id="chart-passrate-trend"></canvas>
+    </div>
+  </div>
+
+  <!-- Analytics chart 2 -->
+  <div class="card">
+    <h3 style="margin-bottom:16px;">Most Frequent Violations logged</h3>
+    <div style="position:relative; height:240px;">
+      <canvas id="chart-violations-freq"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<div class="grid-cols-1-2">
+  <!-- Failure reasons analysis -->
+  <div class="card">
+    <h3 style="margin-bottom:16px;">Core Failure Reason Shares</h3>
+    <div style="position:relative; height:220px; display:flex; justify-content:center;">
+      <canvas id="chart-failurereasons-pie"></canvas>
+    </div>
+  </div>
+
+  <!-- Test Track Failure Heatmap (Interactive SVG) -->
+  <div class="card">
+    <div class="card-title-bar">
+      <h3>RTO SmartTrack failure hotspots (Boundary Heatmap)</h3>
+      <span class="badge badge-danger">Interactive Map</span>
+    </div>
+    <p style="font-size:0.85rem; color:var(--text-sub); margin-bottom:16px;">
+      Hover over red heat zones to view total recorded boundary contact events causing test failures on the track path.
+    </p>
+
+    <div class="heatmap-canvas-container">
+      <!-- SVG Track Layout with glow filters -->
+      <svg viewBox="0 0 600 400" class="heatmap-svg">
+        <defs>
+          <radialGradient id="heat-glow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#ef4444" stop-opacity="0.8"></stop>
+            <stop offset="100%" stop-color="#ef4444" stop-opacity="0"></stop>
+          </radialGradient>
+        </defs>
+        <!-- Track lane boundaries -->
+        <rect x="50" y="50" width="500" height="300" rx="30" fill="none" stroke="var(--border-color)" stroke-width="32"></rect>
+        <rect x="150" y="150" width="300" height="100" rx="10" fill="none" stroke="var(--border-color)" stroke-width="32"></rect>
+        
+        <!-- Center H lines representing parking loop -->
+        <line x1="300" y1="50" x2="300" y2="150" stroke="var(--border-color)" stroke-width="24"></line>
+        <line x1="300" y1="250" x2="300" y2="350" stroke="var(--border-color)" stroke-width="24"></line>
+
+        <!-- Heat spots overlay -->
+        <!-- Hotspot 1: Turn 1 -->
+        <circle cx="90" cy="90" r="35" fill="url(#heat-glow)" class="heat-point" style="cursor:pointer;" onclick="app.showHeatspotInfo('Turn 1 Left Corner', 'Boundary line touches due to tight radius overshoot.', '42 occurrences')"></circle>
+        
+        <!-- Hotspot 2: Parking merge -->
+        <circle cx="300" cy="100" r="30" fill="url(#heat-glow)" class="heat-point" style="cursor:pointer;" onclick="app.showHeatspotInfo('Parallel Box Merge', 'Improper steering recovery during reverse docking alignment.', '28 occurrences')"></circle>
+
+        <!-- Hotspot 3: Turn 3 -->
+        <circle cx="510" cy="310" r="40" fill="url(#heat-glow)" class="heat-point" style="cursor:pointer;" onclick="app.showHeatspotInfo('Right Curve Exit', 'Excessive acceleration at boundary markers on loop exit.', '56 occurrences')"></circle>
+
+        <!-- Car track simulation graphic line -->
+        <path d="M 90,310 A 30,30 0 0 1 66,280 L 66,120 A 30,30 0 0 1 90,90 L 280,90 L 280,140" fill="none" stroke="var(--primary)" stroke-width="3" stroke-dasharray="8 6" style="opacity: 0.7;"></path>
+      </svg>
+    </div>
+    
+    <div style="margin-top:14px; padding:12px; background:var(--bg-main); border-radius:var(--radius-sm); font-size:0.85rem; border:1px solid var(--border-color);" id="heatmap-info-display">
+      <strong>Select a hotspot zone:</strong> Click any red radial glow area on the track above to review localized statistics.
+    </div>
+  </div>
+</div>

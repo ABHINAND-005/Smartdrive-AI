@@ -1,0 +1,164 @@
+<style>
+/* Violations Listing panel */
+.violations-list-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 480px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.violation-card-item {
+  display: flex;
+  gap: 14px;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-card);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.violation-card-item:hover {
+  border-color: var(--danger);
+  transform: translateX(4px);
+  background-color: var(--danger-light);
+}
+
+[data-theme="dark"] .violation-card-item:hover {
+  background-color: rgba(239, 68, 68, 0.08);
+}
+
+.violation-card-item.active {
+  border-color: var(--danger);
+  box-shadow: 0 0 10px var(--danger-glow);
+  background-color: var(--danger-light);
+}
+
+[data-theme="dark"] .violation-card-item.active {
+  background-color: rgba(239, 68, 68, 0.12);
+}
+
+.violation-card-item.severity-warning:hover,
+.violation-card-item.severity-warning.active {
+  border-color: var(--warning);
+  background-color: var(--warning-light);
+}
+
+[data-theme="dark"] .violation-card-item.severity-warning:hover,
+[data-theme="dark"] .violation-card-item.severity-warning.active {
+  background-color: rgba(245, 158, 11, 0.08);
+}
+
+.violation-card-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  background-color: var(--danger-light);
+  color: var(--danger);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.violation-card-item.severity-warning .violation-card-icon {
+  background-color: var(--warning-light);
+  color: var(--warning);
+}
+
+.violation-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.violation-card-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+.violation-card-title span {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.violation-card-desc {
+  font-size: 0.8rem;
+  color: var(--text-sub);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+</style>
+
+<div class="grid-cols-1-2">
+  
+  <!-- Result Details Overview -->
+  <div style="display:flex; flex-direction:column; gap:24px;">
+    <div class="card" style="text-align: center;">
+      <div style="font-size: 0.8rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; margin-bottom:8px;">Evaluation Outcome</div>
+      <div id="res-status-stamp" class="badge badge-success" style="font-size: 1.5rem; padding: 10px 24px; border-radius:var(--radius-md); margin-bottom:20px;">
+        PASSED
+      </div>
+      
+      <div style="display:flex; justify-content:center; gap:24px; margin-bottom: 20px;">
+        <div>
+          <div style="font-size:2.2rem; font-weight:800; font-family:var(--font-title); color:var(--text-main)" id="res-score-val">88</div>
+          <div style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">DRIVING SCORE</div>
+        </div>
+        <div style="border-left: 1px solid var(--border-color)"></div>
+        <div>
+          <div style="font-size:2.2rem; font-weight:800; font-family:var(--font-title); color:var(--text-main)" id="res-confidence-val">96.5%</div>
+          <div style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">AI CONFIDENCE</div>
+        </div>
+      </div>
+
+      <div style="font-size:0.85rem; color:var(--text-sub); border-top:1px solid var(--border-color); padding-top:16px;">
+        <strong>Evaluated on:</strong> <span id="res-evaluation-date">08 June 2026</span>
+      </div>
+    </div>
+
+    <!-- Officer Remarks -->
+    <div class="card">
+      <h3 style="margin-bottom:12px;"><i class="fa-solid fa-user-pen"></i> Authority Certification</h3>
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <div style="font-size:0.9rem; color:var(--text-sub);">
+          <strong>RTO Inspector Remarks:</strong><br>
+          <span id="res-officer-remarks">Candidate demonstrates stable lane behavior and vehicle control. All minimal boundary touches corrected swiftly. Approved.</span>
+        </div>
+        <div style="border-top:1px dashed var(--border-color); padding-top:12px; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-weight:700; font-size:0.85rem;" id="res-officer-name">Inspector K. Raghavan</div>
+            <div style="font-size:0.75rem; color:var(--text-muted);">Senior Motor Vehicles Inspector</div>
+          </div>
+          <span class="badge badge-success" id="res-approval-badge">Approved</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Violations Breakdown -->
+  <div class="card">
+    <div class="card-title-bar">
+      <h3><i class="fa-solid fa-triangle-exclamation text-danger"></i> Detected Violations Breakdown</h3>
+      <span class="badge badge-danger" id="res-violation-count">1 Violation</span>
+    </div>
+    
+    <p style="font-size:0.9rem; color:var(--text-sub); margin-bottom:20px;">
+      The system tracks vehicle movement against boundary limits, signaling rules, and timing parameters. Violations are categorized by severity.
+    </p>
+
+    <!-- Violations Grid list -->
+    <div id="results-violations-list" class="violations-list-panel" style="max-height: none;">
+      <!-- Violations will be rendered dynamically by app.js -->
+    </div>
+  </div>
+
+</div>

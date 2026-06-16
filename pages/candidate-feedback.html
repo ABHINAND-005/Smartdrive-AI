@@ -1,0 +1,96 @@
+<style>
+/* Feedback Specific Animations */
+#feedback-readiness-bar {
+  transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+</style>
+
+<div class="grid-cols-2">
+  
+  <!-- Driver Rating and Strengths/Weaknesses -->
+  <div style="display:flex; flex-direction:column; gap:24px;">
+    <div class="card">
+      <h3 style="margin-bottom:20px;"><i class="fa-solid fa-award"></i> AI Driver Rating Profile</h3>
+      
+      <div style="display:flex; align-items:center; gap:20px; padding:16px; background:var(--bg-main); border-radius:var(--radius-md); border:1px solid var(--border-color); margin-bottom:20px;">
+        <div style="width:60px; height:60px; border-radius:50%; background:var(--primary-glow); color:var(--primary); display:flex; align-items:center; justify-content:center; font-size:2rem;">
+          <i class="fa-solid fa-shield-cat"></i>
+        </div>
+        <div>
+          <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; font-weight:700;">Classification</div>
+          <h4 style="font-size:1.35rem; font-weight:800;" id="feedback-driver-rating">Safe Driver</h4>
+          <p style="font-size:0.8rem; color:var(--text-sub);" id="feedback-driver-rating-desc">Candidate shows high vehicle control stability and defensive driving habits.</p>
+        </div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <div>
+          <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+            <i class="fa-solid fa-circle-check text-success"></i> Key Strengths
+          </h4>
+          <ul style="font-size:0.85rem; color:var(--text-sub); padding-left:20px; display:flex; flex-direction:column; gap:4px;" id="feedback-strengths">
+            <li>Maintains accurate centering inside test lane grid</li>
+            <li>Smooth steering wheel movement during the "8" loop</li>
+            <li>Correct indicator engagement prior to turning</li>
+          </ul>
+        </div>
+        
+        <div style="border-top:1px solid var(--border-color); padding-top:16px;">
+          <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+            <i class="fa-solid fa-circle-exclamation text-warning"></i> Key Weaknesses
+          </h4>
+          <ul style="font-size:0.85rem; color:var(--text-sub); padding-left:20px; display:flex; flex-direction:column; gap:4px;" id="feedback-weaknesses">
+            <li>Slight delay in restoring steering output after lane merge</li>
+            <li>Vehicle boundary buffer limit approached on final turn</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-bottom:16px;"><i class="fa-solid fa-road-circle-exclamation"></i> Practice Exercises Recommendation</h3>
+      <div style="display:flex; flex-direction:column; gap:12px;" id="feedback-exercises">
+        <div style="padding:12px 16px; border:1px solid var(--border-color); border-radius:var(--radius-md); display:flex; gap:14px; align-items:center;">
+          <i class="fa-solid fa-arrows-spin text-primary" style="font-size:1.3rem;"></i>
+          <div>
+            <h4 style="font-size:0.9rem; font-weight:700;">Parallel Boundary Reversing</h4>
+            <p style="font-size:0.8rem; color:var(--text-sub);">Practice tight backing without exceeding lateral 25cm buffer margins.</p>
+          </div>
+        </div>
+        <div style="padding:12px 16px; border:1px solid var(--border-color); border-radius:var(--radius-md); display:flex; gap:14px; align-items:center;">
+          <i class="fa-solid fa-hourglass-half text-success" style="font-size:1.3rem;"></i>
+          <div>
+            <h4 style="font-size:0.9rem; font-weight:700;">Gradient Brake-Hold Start</h4>
+            <p style="font-size:0.8rem; color:var(--text-sub);">Refine handbrake sync to prevent vehicle stall or rollback exceeding 5cm.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recommendation Engine Readiness -->
+  <div class="card">
+    <h3 style="margin-bottom:20px;"><i class="fa-solid fa-chart-column"></i> AI Readiness & Progress Benchmarks</h3>
+    
+    <div style="display:flex; flex-direction:column; gap:24px;">
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <span style="font-size:0.85rem; font-weight:600;">Retest Readiness Index</span>
+          <span style="font-weight:700; color:var(--success)" id="feedback-readiness-val">92%</span>
+        </div>
+        <div style="height:10px; background-color:var(--bg-main); border-radius:5px; overflow:hidden; border:1px solid var(--border-color)">
+          <div style="height:100%; background:linear-gradient(90deg, var(--primary), var(--success)); width:92%" id="feedback-readiness-bar"></div>
+        </div>
+        <span style="font-size:0.75rem; color:var(--text-muted); margin-top:4px; display:block;">Calculated readiness using past simulated evaluation performance profiles.</span>
+      </div>
+
+      <div style="border-top:1px solid var(--border-color); padding-top:20px;">
+        <h4 style="font-size:1rem; margin-bottom:12px;">Personalized Driving Advice</h4>
+        <div style="padding:16px; background-color:var(--primary-light); border-radius:var(--radius-md); border:1px solid var(--primary-glow); font-size:0.85rem; color:var(--text-sub); line-height:1.6;" id="feedback-personalized-text">
+          "Your overall score is excellent. Ensure you use the side mirrors rather than relying exclusively on the back-facing camera to avoid manual remark overrides. Maintain indicator status for at least 3 seconds before executing maneuvers."
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

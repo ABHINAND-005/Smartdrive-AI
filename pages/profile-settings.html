@@ -1,0 +1,123 @@
+<style>
+/* Profile Settings Screen Styles */
+.settings-card-title {
+  margin-bottom: 20px;
+}
+
+.settings-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.settings-save-btn {
+  margin-top: 10px;
+}
+
+.settings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.settings-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.settings-item.bordered {
+  border-top: 1px solid var(--border-color);
+  padding-top: 20px;
+}
+
+.settings-info h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.settings-info p {
+  font-size: 0.8rem;
+  color: var(--text-sub);
+}
+
+.settings-lang-select {
+  width: 140px;
+}
+
+@media (max-width: 768px) {
+  .settings-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+<div class="grid-cols-2">
+  
+  <!-- Personal info -->
+  <div class="card">
+    <h3 class="settings-card-title"><i class="fa-solid fa-user-gear"></i> System Profile Settings</h3>
+    
+    <form onsubmit="event.preventDefault(); alert('Profile settings stored successfully.')">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="profile-edit-name" class="form-control" value="Abhinand S">
+      </div>
+      <div class="settings-grid-2">
+        <div class="form-group">
+          <label>Mobile Number</label>
+          <input type="text" id="profile-edit-mobile" class="form-control" value="+91 9447201045">
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="profile-edit-email" class="form-control" value="abhinand.s@gmail.com">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Assigned Test Center Location</label>
+        <input type="text" class="form-control" readonly value="RTO Sub-station Kasaragod - SmartTrack #04">
+      </div>
+
+      <button type="submit" class="btn btn-primary settings-save-btn">
+        <i class="fa-solid fa-floppy-disk"></i> Save Changes
+      </button>
+    </form>
+  </div>
+
+  <!-- General application parameters -->
+  <div class="card">
+    <h3 class="settings-card-title"><i class="fa-solid fa-sliders"></i> Interface Settings</h3>
+    
+    <div class="settings-list">
+      <div class="settings-item">
+        <div class="settings-info">
+          <h4>App Dark Mode</h4>
+          <p>Toggle the application interface theme to high-contrast dark theme.</p>
+        </div>
+        <button class="btn btn-secondary" onclick="app.toggleTheme()">
+          <i class="fa-solid fa-circle-half-stroke"></i> Theme Toggle
+        </button>
+      </div>
+
+      <div class="settings-item bordered">
+        <div class="settings-info">
+          <h4>Multi-language Terminology</h4>
+          <p>Render layout using local dialect (Malayalam) for RTO candidates.</p>
+        </div>
+        <select class="lang-select settings-lang-select" onchange="app.changeLanguage(this.value)" id="profile-lang-select">
+          <option value="en">English (EN)</option>
+          <option value="ml">മലയാളം (ML)</option>
+        </select>
+      </div>
+
+      <div class="settings-item bordered">
+        <div class="settings-info">
+          <h4>SMS/Email Alerts Sync</h4>
+          <p>Receive automatic eligibility results instantly via SMS gateway link.</p>
+        </div>
+        <span class="badge badge-success">ACTIVE</span>
+      </div>
+    </div>
+  </div>
+
+</div>

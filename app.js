@@ -1,9 +1,24 @@
 /**
- * SmartDrive AI - App Logic Engine (DB Connected with LiveServer & Offline Fallbacks)
+ * SmartDrive AI - App Logic Engine (Firebase Cloud Firestore Ingested)
  * Handles State management, Simulation, Chart generation, AI Chatbot, Localization
  */
 
-const API_BASE = "http://localhost:3000";
+// ==========================================
+// FIREBASE CONFIGURATION
+// ==========================================
+// Paste your Firebase Project web application configuration details here:
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+let db = null;
+let useFirebase = false;
+let fb = {}; // Firebase Firestore method mappings
 
 const translations = {
   en: {
@@ -49,7 +64,7 @@ const translations = {
     db_score_lbl: "സ്കോർ",
     db_score_sub: "നിങ്ങളുടെ ടെസ്റ്റ് വീഡിയോ സ്വയമേവ പ്രോസസ്സ് ചെയ്തു. AI പാതകൾ, ഇൻഡിക്കേറ്റർ ക്രമീകരണങ്ങൾ, വാഹന നിയന്ത്രണങ്ങൾ എന്നിവ കണ്ടെത്തി.",
     db_officer_approval: "ഉദ്യോഗസ്ഥ അംഗീകാരം",
-    db_btn_breakdown: "പൂർണ്ണ വിവരങ്ങൾ കാണുക",
+    db_btn_breakdown: "പരീക്ഷാ ഫലം കാണുക",
     db_btn_review: "പാത വീഡിയോ അവലോകനം ചെയ്യുക",
     db_quick_actions: "ദ്രുത നടപടികൾ",
     db_dl_reports: "റിപ്പോർട്ടുകൾ ഡൗൺലോഡ് ചെയ്യുക",
@@ -211,7 +226,6 @@ class SmartDriveApp {
     this.candidates = [];
     this.auditLogs = [];
     this.notifications = [];
-    this.isOffline = false;
     
     // Video Simulation States
     this.videoDuration = 30;
@@ -239,7 +253,14 @@ class SmartDriveApp {
     this.currentTheme = localStorage.getItem("sd_theme") || "light";
     this.currentLang = localStorage.getItem("sd_lang") || "en";
     this.applyTheme();
+
+    // Dynamically load page template fragments
+    await this.loadTemplates();
+
     this.initMockPath();
+
+    // Initialize Firebase
+    await this.initFirebase();
 
     // Fetch initial database records
     await this.fetchData();
@@ -251,27 +272,135 @@ class SmartDriveApp {
     document.getElementById("landing-stat-rate").innerText = "72.4%";
   }
 
-  // FETCH REST DATA FROM EXPRESS BACKEND (WITH LOCALSTORAGE FALLBACKS)
-  async fetchData() {
-    try {
-      const candRes = await fetch(API_BASE + '/api/candidates');
-      if (!candRes.ok) throw new Error("HTTP error " + candRes.status);
-      this.candidates = await candRes.json();
-      this.isOffline = false;
-      
-      const logRes = await fetch(API_BASE + '/api/audit-logs');
-      this.auditLogs = await logRes.json();
-      
-      const notifyRes = await fetch(API_BASE + '/api/notifications');
-      this.notifications = await notifyRes.json();
+  async loadTemplates() {
+    const templates = [
+      { id: "screen-landing", path: "pages/landing.html" },
+      { id: "screen-user-login", path: "pages/user-login.html" },
+      { id: "screen-admin-login", path: "pages/admin-login.html" },
+      { id: "screen-candidate-dashboard", path: "pages/candidate-dashboard.html" },
+      { id: "screen-candidate-results", path: "pages/candidate-results.html" },
+      { id: "screen-candidate-video-review", path: "pages/candidate-video-review.html" },
+      { id: "screen-candidate-feedback", path: "pages/candidate-feedback.html" },
+      { id: "screen-candidate-eligibility", path: "pages/candidate-eligibility.html" },
+      { id: "screen-candidate-verification", path: "pages/candidate-verification.html" },
+      { id: "screen-candidate-retest", path: "pages/candidate-retest.html" },
+      { id: "screen-admin-dashboard", path: "pages/admin-dashboard.html" },
+      { id: "screen-admin-candidates", path: "pages/admin-candidates.html" },
+      { id: "screen-admin-video-evaluation", path: "pages/admin-video-evaluation.html" },
+      { id: "screen-admin-result-override", path: "pages/admin-result-override.html" },
+      { id: "screen-admin-reports-analytics", path: "pages/admin-reports-analytics.html" },
+      { id: "screen-admin-audit-logs", path: "pages/admin-audit-logs.html" },
+      { id: "screen-profile-settings", path: "pages/profile-settings.html" }
+    ];
 
-    } catch (err) {
-      console.warn("Backend API offline. Falling back to local browser storage:", err.message);
-      this.isOffline = true;
+    await Promise.all(templates.map(async (t) => {
+      const el = document.getElementById(t.id);
+      if (el) {
+        try {
+          const res = await fetch(t.path);
+          if (!res.ok) throw new Error(`Status ${res.status}`);
+          const html = await res.text();
+          el.innerHTML = html;
+        } catch (err) {
+          console.error(`Failed to load template ${t.id} from ${t.path}:`, err);
+        }
+      }
+    }));
+  }
+
+  // DYNAMIC FIREBASE INTEGRATION WITH CDN WRAPPERS
+  async initFirebase() {
+    if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY") {
+      try {
+        console.log("Loading Cloud Firebase SDK dynamically...");
+        const appMod = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js");
+        const firestoreMod = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+        
+        const appInstance = appMod.initializeApp(firebaseConfig);
+        db = firestoreMod.getFirestore(appInstance);
+        
+        useFirebase = true;
+        fb = firestoreMod;
+        
+        console.log("Connected to Firebase Firestore Cloud Database!");
+      } catch (err) {
+        console.warn("Firebase script import failed (probably offline). Running in browser storage simulator:", err.message);
+        useFirebase = false;
+      }
+    } else {
+      console.log("Firebase credentials not configured. Running in Local Storage Simulator Mode.");
+      useFirebase = false;
+    }
+  }
+
+  async fetchData() {
+    if (useFirebase && db) {
+      try {
+        // Fetch candidates collection
+        const candSnap = await fb.getDocs(fb.collection(db, "candidates"));
+        this.candidates = [];
+        candSnap.forEach(d => {
+          this.candidates.push({ id: d.id, ...d.data() });
+        });
+
+        // Seed Firestore if it is completely empty
+        if (this.candidates.length === 0) {
+          console.log("Cloud database empty. Seeding initial candidate data...");
+          for (const c of BACKUP_CANDIDATES) {
+            await fb.setDoc(fb.doc(db, "candidates", c.id), c);
+          }
+          this.candidates = BACKUP_CANDIDATES;
+        }
+
+        // Fetch logs collection
+        const logSnap = await fb.getDocs(fb.collection(db, "audit_logs"));
+        this.auditLogs = [];
+        logSnap.forEach(d => {
+          this.auditLogs.push(d.data());
+        });
+        // Sort descending locally
+        this.auditLogs.sort((a,b) => new Date(b.time) - new Date(a.time));
+
+        // Seed default logs if empty
+        if (this.auditLogs.length === 0) {
+          const defaultLogs = [
+            { time: "2026-06-08 18:32:05", action: "Officer Authenticated", user: "rto.officer.01", ip: "192.168.1.45", detail: "Successful portal login session." },
+            { time: "2026-06-08 17:15:12", action: "Result Published", user: "rto.officer.01", ip: "192.168.1.45", detail: "Published Passed result for APP-2026-001." }
+          ];
+          for (const l of defaultLogs) {
+            await fb.addDoc(fb.collection(db, "audit_logs"), l);
+          }
+          this.auditLogs = defaultLogs;
+        }
+
+        // Fetch notifications collection
+        const notifySnap = await fb.getDocs(fb.collection(db, "notifications"));
+        this.notifications = [];
+        notifySnap.forEach(d => {
+          this.notifications.push({ id: d.id, ...d.data() });
+        });
+        this.notifications.sort((a,b) => b.id - a.id);
+
+        if (this.notifications.length === 0) {
+          const defaultNotify = [
+            { title: "Result Published", desc: "Your driving evaluation result is now available.", time: "2 hours ago", unread: true, type: "success" },
+            { title: "License Approved", desc: "Digital verification badge generated.", time: "1 day ago", unread: false, type: "primary" }
+          ];
+          for (const n of defaultNotify) {
+            const temp = { ...n, id: Date.now() };
+            await fb.setDoc(fb.doc(db, "notifications", String(temp.id)), temp);
+          }
+          this.notifications = defaultNotify;
+        }
+      } catch (err) {
+        console.error("Firestore transaction error:", err.message);
+        this.loadOfflineFallback();
+      }
+    } else {
       this.loadOfflineFallback();
     }
 
-    // Refresh session data if logged in
+    // Refresh active session variables
     if (this.currentUser && this.currentRole === "candidate") {
       const fresh = this.candidates.find(c => c.id === this.currentUser.id);
       if (fresh) this.currentUser = fresh;
@@ -279,15 +408,15 @@ class SmartDriveApp {
   }
 
   loadOfflineFallback() {
-    const cachedCand = localStorage.getItem("sd_fallback_candidates");
+    const cachedCand = localStorage.getItem("sd_firebase_fallback_candidates");
     if (cachedCand) {
       this.candidates = JSON.parse(cachedCand);
     } else {
       this.candidates = BACKUP_CANDIDATES;
-      localStorage.setItem("sd_fallback_candidates", JSON.stringify(this.candidates));
+      localStorage.setItem("sd_firebase_fallback_candidates", JSON.stringify(this.candidates));
     }
 
-    const cachedLogs = localStorage.getItem("sd_fallback_logs");
+    const cachedLogs = localStorage.getItem("sd_firebase_fallback_logs");
     if (cachedLogs) {
       this.auditLogs = JSON.parse(cachedLogs);
     } else {
@@ -295,25 +424,25 @@ class SmartDriveApp {
         { time: "2026-06-08 18:32:05", action: "Officer Authenticated", user: "rto.officer.01", ip: "192.168.1.45", detail: "Successful portal login session." },
         { time: "2026-06-08 17:15:12", action: "Result Published", user: "rto.officer.01", ip: "192.168.1.45", detail: "Published Passed result for APP-2026-001." }
       ];
-      localStorage.setItem("sd_fallback_logs", JSON.stringify(this.auditLogs));
+      localStorage.setItem("sd_firebase_fallback_logs", JSON.stringify(this.auditLogs));
     }
 
-    const cachedNotify = localStorage.getItem("sd_fallback_notify");
+    const cachedNotify = localStorage.getItem("sd_firebase_fallback_notify");
     if (cachedNotify) {
       this.notifications = JSON.parse(cachedNotify);
     } else {
       this.notifications = [
-        { id: 1, title: "Result Published (Offline)", desc: "Your driving evaluation result is cached locally.", time: "2 hours ago", unread: true, type: "success" },
-        { id: 2, title: "Identity Verified (Offline)", desc: "Aadhaar verified locally.", time: "2 days ago", unread: false, type: "info" }
+        { id: 1, title: "Result Published (Simulated)", desc: "Your driving evaluation result is cached locally.", time: "2 hours ago", unread: true, type: "success" },
+        { id: 2, title: "Identity Verified (Simulated)", desc: "Aadhaar verified locally.", time: "2 days ago", unread: false, type: "info" }
       ];
-      localStorage.setItem("sd_fallback_notify", JSON.stringify(this.notifications));
+      localStorage.setItem("sd_firebase_fallback_notify", JSON.stringify(this.notifications));
     }
   }
 
   saveOfflineFallback() {
-    localStorage.setItem("sd_fallback_candidates", JSON.stringify(this.candidates));
-    localStorage.setItem("sd_fallback_logs", JSON.stringify(this.auditLogs));
-    localStorage.setItem("sd_fallback_notify", JSON.stringify(this.notifications));
+    localStorage.setItem("sd_firebase_fallback_candidates", JSON.stringify(this.candidates));
+    localStorage.setItem("sd_firebase_fallback_logs", JSON.stringify(this.auditLogs));
+    localStorage.setItem("sd_firebase_fallback_notify", JSON.stringify(this.notifications));
   }
 
   // NAVIGATION & ROUTING
@@ -505,15 +634,21 @@ class SmartDriveApp {
     this.showScreen("screen-landing");
   }
 
-  // NOTIFICATION SYSTEM
+  // NOTIFICATION DRAWER
   async toggleNotifications() {
     const panel = document.getElementById("app-notification-panel");
     panel.classList.toggle("active");
     
     if (panel.classList.contains("active")) {
-      if (!this.isOffline) {
+      if (useFirebase && db) {
         try {
-          await fetch(API_BASE + '/api/notifications/read', { method: 'PUT' });
+          // Batch update notifications unread to false
+          const snap = await fb.getDocs(fb.collection(db, "notifications"));
+          snap.forEach(async (d) => {
+            if (d.data().unread) {
+              await fb.updateDoc(fb.doc(db, "notifications", d.id), { unread: false });
+            }
+          });
           document.getElementById("notify-badge-dot").style.display = "none";
           await this.fetchData();
           this.renderNotifications();
@@ -565,24 +700,18 @@ class SmartDriveApp {
   }
 
   async addNotification(title, desc, type = "info") {
-    if (!this.isOffline) {
+    const n = { title, desc, time: "Just now", unread: true, type };
+    if (useFirebase && db) {
       try {
-        await fetch(API_BASE + '/api/notifications', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            title, desc, time: "Just now", unread: true, type
-          })
-        });
+        const id = Date.now();
+        await fb.setDoc(fb.doc(db, "notifications", String(id)), { id, ...n });
         await this.fetchData();
         this.renderNotifications();
       } catch (err) {
         console.error(err);
       }
     } else {
-      this.notifications.unshift({
-        id: Date.now(), title, desc, time: "Just now", unread: true, type
-      });
+      this.notifications.unshift({ id: Date.now(), ...n });
       this.saveOfflineFallback();
       this.renderNotifications();
     }
@@ -611,38 +740,38 @@ class SmartDriveApp {
     const now = new Date();
     const timestamp = now.toISOString().slice(0, 19).replace('T', ' ');
     const ip = "192.168.1." + Math.floor(Math.random() * 254);
-    
-    if (!this.isOffline) {
+    const logObj = { time: timestamp, action, user, ip, detail };
+
+    if (useFirebase && db) {
       try {
-        await fetch(API_BASE + '/api/audit-logs', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            time: timestamp, action, user, ip, detail
-          })
-        });
+        await fb.addDoc(fb.collection(db, "audit_logs"), logObj);
         await this.fetchData();
         this.renderAuditLogs();
       } catch (err) {
         console.error(err);
       }
     } else {
-      this.auditLogs.unshift({
-        time: timestamp, action, user, ip, detail
-      });
+      this.auditLogs.unshift(logObj);
       this.saveOfflineFallback();
       this.renderAuditLogs();
     }
   }
 
   async clearAuditLogs() {
-    if (!this.isOffline) {
-      // Just clear locally for now or reseed
-      this.auditLogs = [];
-      await this.addAuditLog("Audit Logs Cleared", "rto.officer.01", "Inspector cleared recent action records.");
+    if (useFirebase && db) {
+      try {
+        const snap = await fb.getDocs(fb.collection(db, "audit_logs"));
+        snap.forEach(async (d) => {
+          await fb.deleteDoc(fb.doc(db, "audit_logs", d.id));
+        });
+        this.auditLogs = [];
+        await this.addAuditLog("Audit Logs Cleared", "rto.officer.01", "Officer cleared database logs.");
+      } catch (err) {
+        console.error(err);
+      }
     } else {
       this.auditLogs = [];
-      this.addAuditLog("Audit Logs Cleared (Offline)", "rto.officer.01", "Inspector cleared cached action logs.");
+      await this.addAuditLog("Audit Logs Cleared (Offline)", "rto.officer.01", "Officer cleared simulation audit logs.");
     }
   }
 
@@ -1352,29 +1481,28 @@ class SmartDriveApp {
     const testDate = document.getElementById("cand-test-date").value;
 
     try {
-      if (!this.isOffline) {
+      if (useFirebase && db) {
         if (id) {
-          await fetch(API_BASE + `/api/candidates/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, appNo, dob, llNo, mobile, email, testDate })
-          });
+          const index = this.candidates.findIndex(c => c.id === id);
+          if (index >= 0) {
+            const candRef = fb.doc(db, "candidates", id);
+            await fb.updateDoc(candRef, { name, appNo, dob, llNo, mobile, email, testDate });
+          }
           await this.addAuditLog("Candidate Edited", "rto.officer.01", `Modified registry details for candidate name: ${name}`);
         } else {
-          await fetch(API_BASE + '/api/candidates', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              name, appNo, dob, llNo, mobile, email, testDate,
-              score: 0, aiConfidence: 0, status: "Pending", eligibility: "Not Eligible",
-              officerRemarks: "Awaiting video upload & evaluation.", officerName: "Inspector K. Raghavan",
-              officerApproved: false, driverRating: "Awaiting Evaluation", driverRatingDesc: "Please upload track telemetry.",
-              strengths: [], weaknesses: [], retestReadiness: 0, retestDate: "", violations: []
-            })
-          });
+          const newId = String(Date.now());
+          const newCandObj = {
+            id: newId, name, appNo, dob, llNo, mobile, email, testDate,
+            score: 0, aiConfidence: 0, status: "Pending", eligibility: "Not Eligible",
+            officerRemarks: "Awaiting video upload & evaluation.", officerName: "Inspector K. Raghavan",
+            officerApproved: false, driverRating: "Awaiting Evaluation", driverRatingDesc: "Please upload track telemetry.",
+            strengths: [], weaknesses: [], retestReadiness: 0, retestDate: "", violations: []
+          };
+          await fb.setDoc(fb.doc(db, "candidates", newId), newCandObj);
           await this.addAuditLog("Candidate Registered", "rto.officer.01", `New registry record added: ${name}`);
         }
       } else {
+        // Fallback
         if (id) {
           const index = this.candidates.findIndex(c => c.id === id);
           if (index >= 0) {
@@ -1408,8 +1536,8 @@ class SmartDriveApp {
     if (confirm("Are you sure you want to delete this candidate record?")) {
       try {
         const c = this.candidates.find(item => item.id === id);
-        if (!this.isOffline) {
-          await fetch(API_BASE + `/api/candidates/${id}`, { method: 'DELETE' });
+        if (useFirebase && db) {
+          await fb.deleteDoc(fb.doc(db, "candidates", id));
         } else {
           const index = this.candidates.findIndex(item => item.id === id);
           if (index >= 0) {
@@ -1546,12 +1674,8 @@ class SmartDriveApp {
     };
 
     try {
-      if (!this.isOffline) {
-        await fetch(API_BASE + `/api/candidates/${id}/result`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(aiResult)
-        });
+      if (useFirebase && db) {
+        await fb.updateDoc(fb.doc(db, "candidates", id), aiResult);
       } else {
         const index = this.candidates.findIndex(item => item.id === id);
         if (index >= 0) {
@@ -1670,12 +1794,8 @@ class SmartDriveApp {
     }
 
     try {
-      if (!this.isOffline) {
-        await fetch(API_BASE + `/api/candidates/${cand.id}/result`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(modifiedResult)
-        });
+      if (useFirebase && db) {
+        await fb.updateDoc(fb.doc(db, "candidates", cand.id), modifiedResult);
       } else {
         const index = this.candidates.findIndex(item => item.id === cand.id);
         if (index >= 0) {
@@ -1785,88 +1905,7 @@ class SmartDriveApp {
     document.getElementById("profile-edit-email").value = user.email || "candidate@gov.in";
   }
 
-  // AI CHAT ASSISTANT WIDGET
-  toggleChat() {
-    const win = document.getElementById("app-chat-window");
-    win.classList.toggle("active");
-    if (win.classList.contains("active")) {
-      document.getElementById("chat-input-box").focus();
-    }
-  }
-
-  handleChatSubmit(e) {
-    e.preventDefault();
-    const box = document.getElementById("chat-input-box");
-    const val = box.value.trim();
-    if (!val) return;
-
-    this.appendChatBubble(val, "user");
-    box.value = "";
-
-    setTimeout(() => {
-      const reply = this.getAICopilotResponse(val);
-      this.appendChatBubble(reply, "bot");
-    }, 600);
-  }
-
-  appendChatBubble(text, sender) {
-    const body = document.getElementById("chat-conversation-body");
-    const bubble = document.createElement("div");
-    bubble.className = `chat-bubble ${sender}`;
-    bubble.innerHTML = text.replace(/\n/g, '<br>');
-    body.appendChild(bubble);
-    body.scrollTop = body.scrollHeight;
-  }
-
-  getAICopilotResponse(query) {
-    const q = query.toLowerCase();
-    const user = this.currentUser;
-
-    if (!user || this.currentRole !== "candidate") {
-      return "Hello! Please select a candidate profile first to query specific test metrics.";
-    }
-
-    if (q.includes("why did i fail") || q.includes("reason for fail") || q.includes("failed")) {
-      if (user.status === "Passed") {
-        return `Congratulations! You actually passed the test with a score of ${user.score}/100. No critical failure violations were recorded.`;
-      }
-      const crit = user.violations.find(v => v.severity === "Critical");
-      if (crit) {
-        return `According to the computer vision analysis, you failed because a Critical violation **"${crit.name}"** was recorded at 00:${crit.time.toString().padStart(2, '0')}. \nDetail: ${crit.description}`;
-      }
-      if (user.violations.length > 0) {
-        return `You scored ${user.score}/100 which falls below the 80/100 pass mark. The system detected: \n` + 
-          user.violations.map(v => `• **${v.name}** at s${v.time} (Severity: ${v.severity})`).join('\n');
-      }
-      return "The system evaluation indicates your score fell below the passing threshold, but no boundary violations were logged. This can be due to general vehicle trajectory instability.";
-    }
-
-    if (q.includes("mistake") || q.includes("errors") || q.includes("violations")) {
-      if (user.violations.length === 0) {
-        return "Congratulations, zero driving mistakes were logged by the computer vision trackers!";
-      }
-      return `The AI camera tracking overlays logged the following infractions: \n` +
-        user.violations.map(v => `• **${v.name}** (Severity: ${v.severity}) at s${v.time} - "${v.description}"`).join('\n');
-    }
-
-    if (q.includes("improve") || q.includes("tips") || q.includes("practice") || q.includes("exercise")) {
-      if (user.status === "Passed") {
-        return "You have a solid performance. For perfect control, focus on stabilizing your speed limit curves and maintaining indicator signaling routines early.";
-      }
-      return `Based on your Weakness profile, RTO guidelines suggest practicing:\n` +
-        user.weaknesses.map(w => `• **${w}**`).join('\n') + 
-        `\nWe recommend booking slot practice sessions for docking reversing and boundary tracking.`;
-    }
-
-    if (q.includes("reappear") || q.includes("retest") || q.includes("schedule") || q.includes("book")) {
-      if (user.status === "Passed") {
-        return "Your license eligibility is approved. You do not need to reappear for tests.";
-      }
-      return `Since your result is failed, you can reappply for a retest slot. \nSuggested Retest Date: **${user.retestDate || 'After 7 days'}**. You can select slot booking dates inside the **"Schedule Retest"** navigation page.`;
-    }
-
-    return "I can analyze your driving evaluation results. Ask me:\n• 'Why did I fail?'\n• 'Which mistakes were detected?'\n• 'How can I improve?'";
-  }
+  // SIDEBAR TOGGLE
 
   toggleSidebar() {
     const sidebar = document.getElementById("app-sidebar");
@@ -1876,3 +1915,4 @@ class SmartDriveApp {
 
 const app = new SmartDriveApp();
 window.onload = () => app.init();
+window.app = app; // Bind globally for HTML event handlers
