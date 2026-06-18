@@ -167,22 +167,114 @@ const defaultDb = {
   ]
 };
 
-// Database Read/Write Helpers
-function readDb() {
-  if (!fs.existsSync(DB_FILE)) {
-    fs.writeFileSync(DB_FILE, JSON.stringify(defaultDb, null, 2));
-    return defaultDb;
+const PROJECT_ID = 'smartdrive-ai-b723c';
+const https = require('https');
+
+// Helper to convert standard flat JSON to Firestore REST fields format
+function toFirestoreFields(obj) {
+  const fields = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (typeof value === 'string') {
+      fields[key] = { stringValue: value };
+    } else if (typeof value === 'number') {
+      if (Number.isInteger(value)) {
+        fields[key] = { integerValue: String(value) };
+      } else {
+        fields[key] = { doubleValue: value };
+      }
+    } else if (typeof value === 'boolean') {
+      fields[key] = { booleanValue: value };
+    } else if (Array.isArray(value)) {
+      fields[key] = {
+        arrayValue: {
+          values: value.map(item => {
+            if (typeof item === 'object' && item !== null) {
+              return { mapValue: { fields: toFirestoreFields(item) } };
+            } else if (typeof item === 'string') {
+              return { stringValue: item };
+            } else if (typeof item === 'number') {
+              return Number.isInteger(item) ? { integerValue: String(item) } : { doubleValue: item };
+            } else if (typeof item === 'boolean') {
+              return { booleanValue: item };
+            }
+            return { stringValue: '' };
+          })
+        }
+      };
+    } else if (typeof value === 'object' && value !== null) {
+      fields[key] = { mapValue: { fields: toFirestoreFields(value) } };
+    }
   }
-  try {
-    const data = fs.readFileSync(DB_FILE, 'utf8');
-    return JSON.parse(data);
-  } catch (err) {
-    return defaultDb;
-  }
+  return fields;
 }
 
-function writeDb(data) {
-  fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+// Helper to convert Firestore REST fields back to standard JSON
+function fromFirestoreFields(fields) {
+  if (!fields) return {};
+  const obj = {};
+  for (const [key, valObj] of Object.entries(fields)) {
+    if ('stringValue' in valObj) {
+      obj[key] = valObj.stringValue;
+    } else if ('integerValue' in valObj) {
+      obj[key] = parseInt(valObj.integerValue, 10);
+    } else if ('doubleValue' in valObj) {
+      obj[key] = parseFloat(valObj.doubleValue);
+    } else if ('booleanValue' in valObj) {
+      obj[key] = valObj.booleanValue;
+    } else if ('arrayValue' in valObj) {
+      const values = valObj.arrayValue.values || [];
+      obj[key] = values.map(item => {
+        if ('mapValue' in item) {
+          return fromFirestoreFields(item.mapValue.fields);
+        } else if ('stringValue' in item) {
+          return item.stringValue;
+        } else if ('integerValue' in item) {
+          return parseInt(item.integerValue, 10);
+        } else if ('doubleValue' in item) {
+          return parseFloat(item.doubleValue);
+        } else if ('booleanValue' in item) {
+          return item.booleanValue;
+        }
+        return null;
+      });
+    } else if ('mapValue' in valObj) {
+      obj[key] = fromFirestoreFields(valObj.mapValue.fields);
+    }
+  }
+  return obj;
+}
+
+// HTTPS REST request helper for Firestore
+function requestFirestore(method, pathUrl, body = null) {
+  return new Promise((resolve, reject) => {
+    const options = {
+      hostname: 'firestore.googleapis.com',
+      port: 443,
+      path: pathUrl,
+      method: method,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    };
+
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          resolve(data ? JSON.parse(data) : null);
+        } else {
+          reject(new Error(`Status ${res.statusCode}: ${data}`));
+        }
+      });
+    });
+
+    req.on('error', err => reject(err));
+    if (body) {
+      req.write(JSON.stringify(body));
+    }
+    req.end();
+  });
 }
 
 // Router Server
@@ -220,24 +312,44 @@ const server = http.createServer((req, res) => {
 
     // API Routing
     if (parts[1] === 'api') {
-      const dbData = readDb();
       res.setHeader('Content-Type', 'application/json');
 
       // 1. GET /api/candidates
       if (parts[2] === 'candidates' && req.method === 'GET' && !parts[3]) {
-        res.writeHead(200);
-        res.end(JSON.stringify(dbData.candidates));
+        const pathUrl = `/v1/projects/${PROJECT_ID}/databases/(default)/documents/candidates`;
+        requestFirestore('GET', pathUrl)
+          .then(data => {
+            const documents = data.documents || [];
+            const list = documents.map(doc => {
+              const id = doc.name.split('/').pop();
+              return { id, ...fromFirestoreFields(doc.fields) };
+            });
+            res.writeHead(200);
+            res.end(JSON.stringify(list));
+          })
+          .catch(err => {
+            res.writeHead(500);
+            res.end(JSON.stringify({ error: err.message }));
+          });
         return;
       }
 
       // 2. POST /api/candidates
       if (parts[2] === 'candidates' && req.method === 'POST') {
         const c = parsedBody;
-        c.id = String(Date.now());
-        dbData.candidates.push(c);
-        writeDb(dbData);
-        res.writeHead(201);
-        res.end(JSON.stringify({ id: c.id, message: "Candidate registered successfully" }));
+        const id = c.id || String(Date.now());
+        c.id = id;
+        const pathUrl = `/v1/projects/${PROJECT_ID}/databases/(default)/documents/candidates/${id}`;
+        const bodyObj = { fields: toFirestoreFields(c) };
+        requestFirestore('PATCH', pathUrl, bodyObj)
+          .then(() => {
+            res.writeHead(201);
+            res.end(JSON.stringify({ id, message: "Candidate registered successfully" }));
+          })
+          .catch(err => {
+            res.writeHead(500);
+            res.end(JSON.stringify({ error: err.message }));
+          });
         return;
       }
 
@@ -245,20 +357,23 @@ const server = http.createServer((req, res) => {
       if (parts[2] === 'candidates' && parts[3] && parts[4] === 'result' && req.method === 'PUT') {
         const id = parts[3];
         const updatedInfo = parsedBody;
-        const index = dbData.candidates.findIndex(item => item.id === id);
+        const getUrl = `/v1/projects/${PROJECT_ID}/databases/(default)/documents/candidates/${id}`;
         
-        if (index >= 0) {
-          dbData.candidates[index] = {
-            ...dbData.candidates[index],
-            ...updatedInfo
-          };
-          writeDb(dbData);
-          res.writeHead(200);
-          res.end(JSON.stringify({ message: "Candidate evaluation score saved and published" }));
-        } else {
-          res.writeHead(404);
-          res.end(JSON.stringify({ error: "Candidate not found" }));
-        }
+        requestFirestore('GET', getUrl)
+          .then(doc => {
+            const currentObj = fromFirestoreFields(doc.fields);
+            const merged = { ...currentObj, ...updatedInfo };
+            const bodyObj = { fields: toFirestoreFields(merged) };
+            return requestFirestore('PATCH', getUrl, bodyObj);
+          })
+          .then(() => {
+            res.writeHead(200);
+            res.end(JSON.stringify({ message: "Candidate evaluation score saved and published" }));
+          })
+          .catch(err => {
+            res.writeHead(500);
+            res.end(JSON.stringify({ error: err.message }));
+          });
         return;
       }
 
@@ -266,86 +381,146 @@ const server = http.createServer((req, res) => {
       if (parts[2] === 'candidates' && parts[3] && req.method === 'PUT') {
         const id = parts[3];
         const updatedDemographics = parsedBody;
-        const index = dbData.candidates.findIndex(item => item.id === id);
+        const getUrl = `/v1/projects/${PROJECT_ID}/databases/(default)/documents/candidates/${id}`;
         
-        if (index >= 0) {
-          dbData.candidates[index] = {
-            ...dbData.candidates[index],
-            name: updatedDemographics.name,
-            appNo: updatedDemographics.appNo,
-            dob: updatedDemographics.dob,
-            llNo: updatedDemographics.llNo,
-            mobile: updatedDemographics.mobile,
-            email: updatedDemographics.email,
-            testDate: updatedDemographics.testDate
-          };
-          writeDb(dbData);
-          res.writeHead(200);
-          res.end(JSON.stringify({ message: "Candidate registry updated successfully" }));
-        } else {
-          res.writeHead(404);
-          res.end(JSON.stringify({ error: "Candidate not found" }));
-        }
+        requestFirestore('GET', getUrl)
+          .then(doc => {
+            const currentObj = fromFirestoreFields(doc.fields);
+            const merged = {
+              ...currentObj,
+              name: updatedDemographics.name,
+              appNo: updatedDemographics.appNo,
+              dob: updatedDemographics.dob,
+              llNo: updatedDemographics.llNo,
+              mobile: updatedDemographics.mobile,
+              email: updatedDemographics.email,
+              testDate: updatedDemographics.testDate
+            };
+            const bodyObj = { fields: toFirestoreFields(merged) };
+            return requestFirestore('PATCH', getUrl, bodyObj);
+          })
+          .then(() => {
+            res.writeHead(200);
+            res.end(JSON.stringify({ message: "Candidate registry updated successfully" }));
+          })
+          .catch(err => {
+            res.writeHead(500);
+            res.end(JSON.stringify({ error: err.message }));
+          });
         return;
       }
 
       // 5. DELETE /api/candidates/:id
       if (parts[2] === 'candidates' && parts[3] && req.method === 'DELETE') {
         const id = parts[3];
-        const index = dbData.candidates.findIndex(item => item.id === id);
-        
-        if (index >= 0) {
-          dbData.candidates.splice(index, 1);
-          writeDb(dbData);
-          res.writeHead(200);
-          res.end(JSON.stringify({ message: "Candidate registry deleted successfully" }));
-        } else {
-          res.writeHead(404);
-          res.end(JSON.stringify({ error: "Candidate not found" }));
-        }
+        const pathUrl = `/v1/projects/${PROJECT_ID}/databases/(default)/documents/candidates/${id}`;
+        requestFirestore('DELETE', pathUrl)
+          .then(() => {
+            res.writeHead(200);
+            res.end(JSON.stringify({ message: "Candidate registry deleted successfully" }));
+          })
+          .catch(err => {
+            res.writeHead(500);
+            res.end(JSON.stringify({ error: err.message }));
+          });
         return;
       }
 
       // 6. GET /api/audit-logs
       if (parts[2] === 'audit-logs' && req.method === 'GET') {
-        res.writeHead(200);
-        res.end(JSON.stringify(dbData.audit_logs));
+        const pathUrl = `/v1/projects/${PROJECT_ID}/databases/(default)/documents/audit_logs`;
+        requestFirestore('GET', pathUrl)
+          .then(data => {
+            const documents = data.documents || [];
+            const list = documents.map(doc => fromFirestoreFields(doc.fields));
+            res.writeHead(200);
+            res.end(JSON.stringify(list));
+          })
+          .catch(err => {
+            res.writeHead(500);
+            res.end(JSON.stringify({ error: err.message }));
+          });
         return;
       }
 
       // 7. POST /api/audit-logs
       if (parts[2] === 'audit-logs' && req.method === 'POST') {
-        dbData.audit_logs.unshift(parsedBody);
-        writeDb(dbData);
-        res.writeHead(201);
-        res.end(JSON.stringify({ message: "Audit log entry created" }));
+        const logObj = parsedBody;
+        const id = String(Date.now()) + Math.floor(Math.random() * 1000);
+        const pathUrl = `/v1/projects/${PROJECT_ID}/databases/(default)/documents/audit_logs/${id}`;
+        const bodyObj = { fields: toFirestoreFields(logObj) };
+        requestFirestore('PATCH', pathUrl, bodyObj)
+          .then(() => {
+            res.writeHead(201);
+            res.end(JSON.stringify({ message: "Audit log entry created" }));
+          })
+          .catch(err => {
+            res.writeHead(500);
+            res.end(JSON.stringify({ error: err.message }));
+          });
         return;
       }
 
       // 8. GET /api/notifications
       if (parts[2] === 'notifications' && req.method === 'GET') {
-        res.writeHead(200);
-        res.end(JSON.stringify(dbData.notifications));
+        const pathUrl = `/v1/projects/${PROJECT_ID}/databases/(default)/documents/notifications`;
+        requestFirestore('GET', pathUrl)
+          .then(data => {
+            const documents = data.documents || [];
+            const list = documents.map(doc => fromFirestoreFields(doc.fields));
+            res.writeHead(200);
+            res.end(JSON.stringify(list));
+          })
+          .catch(err => {
+            res.writeHead(500);
+            res.end(JSON.stringify({ error: err.message }));
+          });
         return;
       }
 
       // 9. POST /api/notifications
       if (parts[2] === 'notifications' && req.method === 'POST') {
         const n = parsedBody;
-        n.id = Date.now();
-        dbData.notifications.unshift(n);
-        writeDb(dbData);
-        res.writeHead(201);
-        res.end(JSON.stringify({ message: "Notification alert created" }));
+        const id = n.id || Date.now();
+        n.id = id;
+        const pathUrl = `/v1/projects/${PROJECT_ID}/databases/(default)/documents/notifications/${id}`;
+        const bodyObj = { fields: toFirestoreFields(n) };
+        requestFirestore('PATCH', pathUrl, bodyObj)
+          .then(() => {
+            res.writeHead(201);
+            res.end(JSON.stringify({ message: "Notification alert created" }));
+          })
+          .catch(err => {
+            res.writeHead(500);
+            res.end(JSON.stringify({ error: err.message }));
+          });
         return;
       }
 
       // 10. PUT /api/notifications/read
       if (parts[2] === 'notifications' && parts[3] === 'read' && req.method === 'PUT') {
-        dbData.notifications.forEach(n => n.unread = false);
-        writeDb(dbData);
-        res.writeHead(200);
-        res.end(JSON.stringify({ message: "All notifications marked as read" }));
+        const pathUrl = `/v1/projects/${PROJECT_ID}/databases/(default)/documents/notifications`;
+        requestFirestore('GET', pathUrl)
+          .then(data => {
+            const documents = data.documents || [];
+            const updatePromises = documents.map(doc => {
+              const docId = doc.name.split('/').pop();
+              const currentObj = fromFirestoreFields(doc.fields);
+              currentObj.unread = false;
+              const updateUrl = `/v1/projects/${PROJECT_ID}/databases/(default)/documents/notifications/${docId}`;
+              const bodyObj = { fields: toFirestoreFields(currentObj) };
+              return requestFirestore('PATCH', updateUrl, bodyObj);
+            });
+            return Promise.all(updatePromises);
+          })
+          .then(() => {
+            res.writeHead(200);
+            res.end(JSON.stringify({ message: "All notifications marked as read" }));
+          })
+          .catch(err => {
+            res.writeHead(500);
+            res.end(JSON.stringify({ error: err.message }));
+          });
         return;
       }
 
@@ -387,4 +562,5 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, () => {
   console.log(`SmartDrive AI Server running locally at http://localhost:${PORT}`);
+  console.log(`Connected to Cloud Firestore Database: ${PROJECT_ID}`);
 });

@@ -8,12 +8,13 @@
 // ==========================================
 // Paste your Firebase Project web application configuration details here:
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyB0k3XqG7LABYY5qwozeYk-_V-1jaVVspU",
+  authDomain: "smartdrive-ai-b723c.firebaseapp.com",
+  projectId: "smartdrive-ai-b723c",
+  storageBucket: "smartdrive-ai-b723c.firebasestorage.app",
+  messagingSenderId: "595277301071",
+  appId: "1:595277301071:web:ff5693c8b2d0aaaea0b13a",
+  measurementId: "G-8L6KZ8ND2S"
 };
 
 let db = null;
@@ -73,149 +74,7 @@ const translations = {
   }
 };
 
-const BACKUP_CANDIDATES = [
-  {
-    id: "1",
-    name: "Abhinand S",
-    appNo: "APP-2026-001",
-    dob: "2000-01-01",
-    llNo: "KL-14/10452/2026",
-    mobile: "9447201045",
-    email: "abhinand.s@gmail.com",
-    testDate: "2026-06-08",
-    score: 88,
-    aiConfidence: 96.5,
-    status: "Passed",
-    eligibility: "Eligible",
-    officerRemarks: "Candidate demonstrates stable lane behavior and vehicle control. All minimal boundary touches corrected swiftly. Approved.",
-    officerName: "Inspector K. Raghavan",
-    officerApproved: true,
-    driverRating: "Safe Driver",
-    driverRatingDesc: "Candidate shows high vehicle control stability and defensive driving habits.",
-    strengths: ["Maintains accurate centering inside test lane grid", "Smooth steering wheel movement during the curve", "Correct indicator engagement prior to turning"],
-    weaknesses: ["Slight delay in restoring steering output after parking merge"],
-    retestReadiness: 92,
-    retestDate: "",
-    violations: [
-      {
-        name: "Lane Boundary Touch",
-        severity: "Warning",
-        time: 14,
-        description: "Left front tire breached yellow guideline coordinates temporarily during the curve loop.",
-        x: 210, y: 90
-      }
-    ]
-  },
-  {
-    id: "2",
-    name: "Meera Nair",
-    appNo: "APP-2026-002",
-    dob: "1998-05-15",
-    llNo: "KL-14/09845/2026",
-    mobile: "9845620145",
-    email: "meera.nair@yahoo.com",
-    testDate: "2026-06-07",
-    score: 45,
-    aiConfidence: 92.4,
-    status: "Failed",
-    eligibility: "Retest Required",
-    officerRemarks: "Critical boundaries crossed twice on left corners. Engine stalled in box parking grid. Retest recommended after mandatory road practice.",
-    officerName: "Inspector K. Raghavan",
-    officerApproved: true,
-    driverRating: "Risky Driver",
-    driverRatingDesc: "Frequent boundary drifts and engine stalls show insufficient maneuver practice.",
-    strengths: ["Proper seatbelt wear and look-around scans verified"],
-    weaknesses: ["Crossed outer boundary lines during tight turns", "Improper brake balance control resulting in vehicle stall"],
-    retestReadiness: 48,
-    retestDate: "2026-06-15",
-    violations: [
-      {
-        name: "Lane Boundary Touch",
-        severity: "Warning",
-        time: 8,
-        description: "Left tire crossed lateral limits at 8s.",
-        x: 100, y: 160
-      },
-      {
-        name: "Vehicle Stall",
-        severity: "Critical",
-        time: 18,
-        description: "Vehicle remained stationary with zero engine speed in parking grid for 7 seconds.",
-        x: 300, y: 130
-      },
-      {
-        name: "Wrong Indicator Usage",
-        severity: "Warning",
-        time: 25,
-        description: "Turned into exit lane without activating side indicators.",
-        x: 280, y: 140
-      }
-    ]
-  },
-  {
-    id: "3",
-    name: "Rahul K",
-    appNo: "APP-2026-003",
-    dob: "2001-11-20",
-    llNo: "KL-14/11054/2026",
-    mobile: "9048756321",
-    email: "rahul.k@outlook.com",
-    testDate: "2026-06-09",
-    score: 95,
-    aiConfidence: 98.2,
-    status: "Passed",
-    eligibility: "Eligible",
-    officerRemarks: "Flawless boundary scores. Perfect reverse parking execution.",
-    officerName: "Inspector A. Prasad",
-    officerApproved: true,
-    driverRating: "Safe Driver",
-    driverRatingDesc: "Superior coordinate alignment and timely signaling alerts.",
-    strengths: ["Zero boundary drifts logged", "Flawless lane docking", "Immediate indicator transitions"],
-    weaknesses: [],
-    retestReadiness: 98,
-    retestDate: "",
-    violations: []
-  },
-  {
-    id: "4",
-    name: "Sneha Joseph",
-    appNo: "APP-2026-004",
-    dob: "1999-08-30",
-    llNo: "KL-14/08451/2026",
-    mobile: "8596041235",
-    email: "sneha.j@gmail.com",
-    testDate: "2026-06-05",
-    score: 62,
-    aiConfidence: 94.0,
-    status: "Failed",
-    eligibility: "Retest Required",
-    officerRemarks: "Overspeeding in curves. Retest scheduled.",
-    officerName: "Inspector A. Prasad",
-    officerApproved: true,
-    driverRating: "Average Driver",
-    driverRatingDesc: "General stability matches standard thresholds, but speed limits breached.",
-    strengths: ["Accurate reverse path tracking lines"],
-    weaknesses: ["Breached speed limits on turns"],
-    retestReadiness: 65,
-    retestDate: "2026-06-12",
-    violations: [
-      {
-        name: "Overspeeding",
-        severity: "Warning",
-        time: 12,
-        description: "Exceeded 20 km/h limit in turn radius.",
-        x: 100, y: 100
-      },
-      {
-        name: "Unsafe Turn",
-        severity: "Warning",
-        time: 22,
-        description: "Turned curve with excessive steering momentum.",
-        x: 380, y: 90
-      }
-    ]
-  }
-];
+const BACKUP_CANDIDATES = [];
 
 class SmartDriveApp {
   constructor() {
@@ -257,13 +116,24 @@ class SmartDriveApp {
     // Dynamically load page template fragments
     await this.loadTemplates();
 
-    this.initMockPath();
-
     // Initialize Firebase
     await this.initFirebase();
 
-    // Fetch initial database records
-    await this.fetchData();
+    // Fetch initial database records with connection timeout fallback
+    if (useFirebase) {
+      try {
+        await Promise.race([
+          this.fetchData(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error("Firestore connection timeout")), 6000))
+        ]);
+      } catch (err) {
+        console.warn("Firestore initialization timed out or failed. Falling back to local storage simulator mode:", err.message);
+        useFirebase = false;
+        this.loadOfflineFallback();
+      }
+    } else {
+      this.loadOfflineFallback();
+    }
 
     this.renderNotifications();
     this.renderAuditLogs();
@@ -279,11 +149,8 @@ class SmartDriveApp {
       { id: "screen-admin-login", path: "pages/admin-login.html" },
       { id: "screen-candidate-dashboard", path: "pages/candidate-dashboard.html" },
       { id: "screen-candidate-results", path: "pages/candidate-results.html" },
-      { id: "screen-candidate-video-review", path: "pages/candidate-video-review.html" },
       { id: "screen-candidate-feedback", path: "pages/candidate-feedback.html" },
       { id: "screen-candidate-eligibility", path: "pages/candidate-eligibility.html" },
-      { id: "screen-candidate-verification", path: "pages/candidate-verification.html" },
-      { id: "screen-candidate-retest", path: "pages/candidate-retest.html" },
       { id: "screen-admin-dashboard", path: "pages/admin-dashboard.html" },
       { id: "screen-admin-candidates", path: "pages/admin-candidates.html" },
       { id: "screen-admin-video-evaluation", path: "pages/admin-video-evaluation.html" },
@@ -336,24 +203,30 @@ class SmartDriveApp {
   async fetchData() {
     if (useFirebase && db) {
       try {
-        // Fetch candidates collection
-        const candSnap = await fb.getDocs(fb.collection(db, "candidates"));
+        // Fetch candidates, logs, and notifications in parallel
+        const [candSnap, logSnap, notifySnap] = await Promise.all([
+          fb.getDocs(fb.collection(db, "candidates")),
+          fb.getDocs(fb.collection(db, "audit_logs")),
+          fb.getDocs(fb.collection(db, "notifications"))
+        ]);
+
         this.candidates = [];
         candSnap.forEach(d => {
           this.candidates.push({ id: d.id, ...d.data() });
         });
+        // Sort newest registered first
+        this.candidates.sort((a, b) => Number(b.id) - Number(a.id));
 
         // Seed Firestore if it is completely empty
         if (this.candidates.length === 0) {
           console.log("Cloud database empty. Seeding initial candidate data...");
-          for (const c of BACKUP_CANDIDATES) {
-            await fb.setDoc(fb.doc(db, "candidates", c.id), c);
-          }
+          const seedPromises = BACKUP_CANDIDATES.map(c => 
+            fb.setDoc(fb.doc(db, "candidates", c.id), c)
+          );
+          await Promise.all(seedPromises);
           this.candidates = BACKUP_CANDIDATES;
         }
 
-        // Fetch logs collection
-        const logSnap = await fb.getDocs(fb.collection(db, "audit_logs"));
         this.auditLogs = [];
         logSnap.forEach(d => {
           this.auditLogs.push(d.data());
@@ -367,14 +240,13 @@ class SmartDriveApp {
             { time: "2026-06-08 18:32:05", action: "Officer Authenticated", user: "rto.officer.01", ip: "192.168.1.45", detail: "Successful portal login session." },
             { time: "2026-06-08 17:15:12", action: "Result Published", user: "rto.officer.01", ip: "192.168.1.45", detail: "Published Passed result for APP-2026-001." }
           ];
-          for (const l of defaultLogs) {
-            await fb.addDoc(fb.collection(db, "audit_logs"), l);
-          }
+          const seedPromises = defaultLogs.map(l => 
+            fb.addDoc(fb.collection(db, "audit_logs"), l)
+          );
+          await Promise.all(seedPromises);
           this.auditLogs = defaultLogs;
         }
 
-        // Fetch notifications collection
-        const notifySnap = await fb.getDocs(fb.collection(db, "notifications"));
         this.notifications = [];
         notifySnap.forEach(d => {
           this.notifications.push({ id: d.id, ...d.data() });
@@ -386,10 +258,11 @@ class SmartDriveApp {
             { title: "Result Published", desc: "Your driving evaluation result is now available.", time: "2 hours ago", unread: true, type: "success" },
             { title: "License Approved", desc: "Digital verification badge generated.", time: "1 day ago", unread: false, type: "primary" }
           ];
-          for (const n of defaultNotify) {
-            const temp = { ...n, id: Date.now() };
-            await fb.setDoc(fb.doc(db, "notifications", String(temp.id)), temp);
-          }
+          const seedPromises = defaultNotify.map((n, i) => {
+            const temp = { ...n, id: Date.now() + i };
+            return fb.setDoc(fb.doc(db, "notifications", String(temp.id)), temp);
+          });
+          await Promise.all(seedPromises);
           this.notifications = defaultNotify;
         }
       } catch (err) {
@@ -415,6 +288,8 @@ class SmartDriveApp {
       this.candidates = BACKUP_CANDIDATES;
       localStorage.setItem("sd_firebase_fallback_candidates", JSON.stringify(this.candidates));
     }
+    // Sort newest registered first
+    this.candidates.sort((a, b) => Number(b.id) - Number(a.id));
 
     const cachedLogs = localStorage.getItem("sd_firebase_fallback_logs");
     if (cachedLogs) {
@@ -463,7 +338,7 @@ class SmartDriveApp {
 
     document.getElementById("app-notification-panel").classList.remove("active");
 
-    if (screenId !== "candidate-video-review" && this.isPlaying) {
+    if (this.isPlaying) {
       this.togglePlay();
     }
 
@@ -473,18 +348,12 @@ class SmartDriveApp {
     } else if (screenId === "candidate-results") {
       document.getElementById("current-screen-title").innerText = this.currentLang === "en" ? "Driving Test Results" : "പരീക്ഷാ ഫലം";
       this.renderCandidateResults();
-    } else if (screenId === "candidate-video-review") {
-      document.getElementById("current-screen-title").innerText = this.currentLang === "en" ? "Driving Test Video Review" : "വീഡിയോ അവലോകനം";
-      this.initVideoReview();
     } else if (screenId === "candidate-feedback") {
       document.getElementById("current-screen-title").innerText = this.currentLang === "en" ? "AI Driving Analysis" : "AI അഭിപ്രായം";
       this.renderCandidateFeedback();
     } else if (screenId === "candidate-eligibility") {
       document.getElementById("current-screen-title").innerText = this.currentLang === "en" ? "License Eligibility" : "ലൈസൻസ് യോഗ്യത";
       this.renderCandidateEligibility();
-    } else if (screenId === "candidate-retest") {
-      document.getElementById("current-screen-title").innerText = this.currentLang === "en" ? "Schedule Retest Slot" : "റീടെസ്റ്റ് ഷെഡ്യൂൾ";
-      this.renderRetestBooking();
     } else if (screenId === "admin-dashboard") {
       document.getElementById("current-screen-title").innerText = "Admin Portal Dashboard";
       this.renderAdminDashboard();
@@ -574,16 +443,27 @@ class SmartDriveApp {
     const appNo = document.getElementById("user-app-no").value.trim();
     const dob = document.getElementById("user-dob").value;
 
-    await this.fetchData();
+    if (useFirebase) {
+      try {
+        await Promise.race([
+          this.fetchData(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 2000))
+        ]);
+      } catch (err) {
+        console.warn("Fetch timed out. Using local cache.");
+      }
+    }
 
     const user = this.candidates.find(c => c.appNo === appNo && c.dob === dob);
     if (user) {
       this.currentUser = user;
       this.currentRole = "candidate";
       this.setupDashboardView();
-      await this.addAuditLog("Candidate Authenticated", user.name, "APP Login session.");
       this.showScreen("app-layout");
       this.route("candidate-dashboard");
+      
+      // Perform log write in background to avoid blocking user session
+      this.addAuditLog("Candidate Authenticated", user.name, "APP Login session.");
     } else {
       alert("Invalid Candidate Application Number or Date of Birth. Check App No (e.g. APP-2026-001) and Date.");
     }
@@ -598,9 +478,11 @@ class SmartDriveApp {
       this.currentUser = { name: "Officer K. Raghavan", appNo: "RTO-1045", dob: "", email: "rtokasaragod@gov.in" };
       this.currentRole = "admin";
       this.setupDashboardView();
-      await this.addAuditLog("Officer Authenticated", "Officer K. Raghavan", "Secure admin session initialized.");
       this.showScreen("app-layout");
       this.route("admin-dashboard");
+
+      // Perform log write in background to avoid blocking user session
+      this.addAuditLog("Officer Authenticated", "Officer K. Raghavan", "Secure admin session initialized.");
     } else {
       alert("Invalid credentials. Hint: use rto.officer.01 and rto123.");
     }
@@ -802,10 +684,8 @@ class SmartDriveApp {
 
     if (user.eligibility === "Eligible") {
       eligBg.className = "stat-icon bg-success-light";
-      document.getElementById("db-retest-nav-btn").style.display = "none";
     } else {
       eligBg.className = "stat-icon bg-danger-light";
-      document.getElementById("db-retest-nav-btn").style.display = "flex";
     }
 
     const circumference = 2 * Math.PI * 70;
@@ -874,298 +754,6 @@ class SmartDriveApp {
       list.appendChild(card);
     });
   }
-
-  // VIDEO REVIEW PAGE (Simulation coordinates and timeline)
-  initMockPath() {
-    this.simulatedPath = [];
-    
-    for (let f = 0; f < 80; f++) {
-      const progress = f / 80;
-      const y = 280 - progress * 180;
-      this.simulatedPath.push({ x: 100, y, v: 16, indicator: false });
-    }
-
-    for (let f = 0; f < 80; f++) {
-      const progress = f / 80;
-      const x = 100 + progress * 200;
-      let y = 100;
-      if (f + 80 >= 135 && f + 80 <= 145) {
-        y = 85;
-      }
-      this.simulatedPath.push({ x, y, v: 12, indicator: progress > 0.6 });
-    }
-
-    for (let f = 0; f < 60; f++) {
-      const progress = f / 60;
-      const y = 100 + progress * 110;
-      this.simulatedPath.push({ x: 300, y, v: 8, indicator: false });
-    }
-
-    for (let f = 0; f < 40; f++) {
-      const progress = f / 40;
-      const y = 210 - progress * 110;
-      this.simulatedPath.push({ x: 300, y, v: -6, indicator: false });
-    }
-
-    for (let f = 0; f < 40; f++) {
-      const progress = f / 40;
-      const x = 300 + progress * 240;
-      this.simulatedPath.push({ x, y: 100, v: 14, indicator: true });
-    }
-  }
-
-  initVideoReview() {
-    this.videoTime = 0;
-    this.isPlaying = false;
-    this.activeViolationIndex = -1;
-    
-    const container = document.getElementById("review-timeline-markers");
-    container.innerHTML = "";
-    
-    const user = this.currentUser;
-    user.violations.forEach((v, index) => {
-      const marker = document.createElement("div");
-      marker.className = `timeline-marker ${v.severity === 'Critical' ? 'critical' : 'warning'}`;
-      const percentage = (v.time / this.videoDuration) * 100;
-      marker.style.left = `${percentage}%`;
-      marker.innerHTML = `<span class="timeline-marker-tooltip">${v.name} (00:${v.time.toString().padStart(2, '0')})</span>`;
-      marker.onclick = (e) => {
-        e.stopPropagation();
-        this.videoTime = v.time;
-        this.activeViolationIndex = index;
-        this.updateScrubber();
-        this.drawReviewFrame();
-      };
-      container.appendChild(marker);
-    });
-
-    this.updateScrubber();
-    this.drawReviewFrame();
-  }
-
-  togglePlay() {
-    const btn = document.getElementById("review-play-btn");
-    if (this.isPlaying) {
-      clearInterval(this.playInterval);
-      btn.innerHTML = `<i class="fa-solid fa-play"></i>`;
-      this.isPlaying = false;
-    } else {
-      btn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
-      this.isPlaying = true;
-      
-      this.playInterval = setInterval(() => {
-        this.videoTime += 0.1;
-        if (this.videoTime >= this.videoDuration) {
-          this.videoTime = this.videoDuration;
-          this.togglePlay();
-        }
-        this.updateScrubber();
-        this.drawReviewFrame();
-      }, 100);
-    }
-  }
-
-  resetVideo() {
-    if (this.isPlaying) this.togglePlay();
-    this.videoTime = 0;
-    this.activeViolationIndex = -1;
-    this.updateScrubber();
-    this.drawReviewFrame();
-  }
-
-  updateScrubber() {
-    const percentage = (this.videoTime / this.videoDuration) * 100;
-    document.getElementById("review-progress-bar").style.width = `${percentage}%`;
-    document.getElementById("review-scrubber-handle").style.left = `${percentage}%`;
-    
-    const mins = Math.floor(this.videoTime / 60);
-    const secs = Math.floor(this.videoTime % 60);
-    document.getElementById("review-time-display").innerText = 
-      `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')} / 00:30`;
-  }
-
-  handleScrub(e) {
-    const bar = document.getElementById("review-scrubber");
-    const rect = bar.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const percentage = x / rect.width;
-    this.videoTime = percentage * this.videoDuration;
-    if (this.videoTime < 0) this.videoTime = 0;
-    if (this.videoTime > this.videoDuration) this.videoTime = this.videoDuration;
-    
-    this.updateScrubber();
-    this.drawReviewFrame();
-  }
-
-  drawReviewFrame() {
-    const canvas = document.getElementById("review-canvas");
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    ctx.fillStyle = this.currentTheme === "dark" ? "#0b0f19" : "#f1f5f9";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.lineWidth = 26;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.strokeStyle = this.currentTheme === "dark" ? "#1e293b" : "#cbd5e1";
-    
-    ctx.beginPath();
-    ctx.moveTo(100, 280);
-    ctx.lineTo(100, 100);
-    ctx.lineTo(300, 100);
-    ctx.lineTo(300, 220);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(300, 100);
-    ctx.lineTo(540, 100);
-    ctx.stroke();
-
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = "#fbbf24";
-    ctx.setLineDash([6, 4]);
-    ctx.beginPath();
-    ctx.rect(80, 75, 480, 230);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = "var(--success)";
-    ctx.beginPath();
-    ctx.moveTo(85, 280);
-    ctx.lineTo(115, 280);
-    ctx.stroke();
-
-    ctx.strokeStyle = "var(--primary)";
-    ctx.beginPath();
-    ctx.moveTo(540, 85);
-    ctx.lineTo(540, 115);
-    ctx.stroke();
-
-    const frameIndex = Math.min(
-      Math.floor((this.videoTime / this.videoDuration) * (this.simulatedPath.length - 1)),
-      this.simulatedPath.length - 1
-    );
-    const vehicle = this.simulatedPath[frameIndex];
-
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = "rgba(59, 130, 246, 0.4)";
-    ctx.beginPath();
-    ctx.moveTo(100, 280);
-    for (let i = 0; i <= frameIndex; i++) {
-      ctx.lineTo(this.simulatedPath[i].x, this.simulatedPath[i].y);
-    }
-    ctx.stroke();
-
-    const user = this.currentUser;
-    let hudAlert = document.getElementById("review-hud-alert");
-    hudAlert.style.display = "none";
-    
-    user.violations.forEach((v, index) => {
-      ctx.fillStyle = v.severity === "Critical" ? "rgba(239, 68, 68, 0.3)" : "rgba(245, 158, 11, 0.3)";
-      ctx.strokeStyle = v.severity === "Critical" ? "#ef4444" : "#f59e0b";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(v.x, v.y, 20, 0, 2 * Math.PI);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = v.severity === "Critical" ? "#ef4444" : "#f59e0b";
-      ctx.beginPath();
-      ctx.arc(v.x, v.y, 5, 0, 2 * Math.PI);
-      ctx.fill();
-
-      if (Math.abs(this.videoTime - v.time) < 1.5) {
-        hudAlert.innerText = `${v.name.toUpperCase()} DETECTED`;
-        hudAlert.style.display = "block";
-        hudAlert.className = `hud-pill ${v.severity === 'Critical' ? 'danger' : 'warning'}`;
-        this.activeViolationIndex = index;
-      }
-    });
-
-    ctx.fillStyle = "var(--primary)";
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = "rgba(37, 99, 235, 0.5)";
-    ctx.beginPath();
-    ctx.arc(vehicle.x, vehicle.y, 8, 0, 2 * Math.PI);
-    ctx.fill();
-    ctx.shadowBlur = 0;
-
-    if (vehicle.indicator && Math.floor(this.videoTime * 5) % 2 === 0) {
-      ctx.fillStyle = "#eab308";
-      ctx.beginPath();
-      ctx.arc(vehicle.x + 12, vehicle.y, 3, 0, 2 * Math.PI);
-      ctx.fill();
-    }
-
-    document.getElementById("review-hud-velocity").innerText = `SPEED: ${Math.abs(vehicle.v)} km/h`;
-
-    this.renderSelectedViolationInfo();
-    this.drawEvidenceScreenshot(vehicle.x, vehicle.y);
-  }
-
-  drawEvidenceScreenshot(vx, vy) {
-    const canvas = document.getElementById("evidence-canvas");
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    ctx.fillStyle = "#0f172a";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.strokeStyle = "rgba(16, 185, 129, 0.3)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(0, canvas.height / 2);
-    ctx.lineTo(canvas.width, canvas.height / 2);
-    ctx.moveTo(canvas.width / 2, 0);
-    ctx.lineTo(canvas.width / 2, canvas.height);
-    ctx.stroke();
-
-    ctx.fillStyle = "#4ade80";
-    ctx.font = "10px monospace";
-    ctx.fillText("CAM_02 [CAB_FEED]", 10, 20);
-    ctx.fillText("GPS_LOCK: OK", 10, 35);
-    ctx.fillText(`X:${vx.toFixed(1)} Y:${vy.toFixed(1)}`, 10, 50);
-
-    ctx.strokeStyle = "#ffffff";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(canvas.width / 2, canvas.height / 2, 40, 0, Math.PI, true);
-    ctx.stroke();
-
-    const mins = Math.floor(this.videoTime / 60);
-    const secs = Math.floor(this.videoTime % 60);
-    document.getElementById("review-evidence-timestamp").innerText = 
-      `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  }
-
-  renderSelectedViolationInfo() {
-    const details = document.getElementById("review-selected-violation-details");
-    const user = this.currentUser;
-    
-    if (this.activeViolationIndex >= 0 && user.violations[this.activeViolationIndex]) {
-      const v = user.violations[this.activeViolationIndex];
-      details.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-          <h4 class="${v.severity === 'Critical' ? 'text-danger' : 'text-warning'}" style="font-size:1.05rem;">${v.name}</h4>
-          <span class="badge ${v.severity === 'Critical' ? 'badge-danger' : 'badge-warning'}">${v.severity}</span>
-        </div>
-        <p style="font-size:0.85rem; color:var(--text-sub); line-height:1.5; margin-bottom:10px;">
-          ${v.description}
-        </p>
-        <div style="font-size:0.8rem; font-family:monospace; color:var(--text-muted);">
-          Coordinates: X:${v.x} Y:${v.y}<br>
-          Frame Trigger: s${v.time}
-        </div>
-      `;
-    } else {
-      details.innerHTML = `
-        <p style="font-size:0.9rem; color:var(--text-sub);">Select a violation from the timeline scrubber or play the video to see active boundary overlays.</p>
-      `;
-    }
-  }
-
   // AI FEEDBACK AND RECOMMENDATIONS SCREEN
   renderCandidateFeedback() {
     const user = this.currentUser;
@@ -1235,90 +823,7 @@ class SmartDriveApp {
     );
   }
 
-  // DOCUMENT VERIFICATION SCREEN
-  handleDocUpload(e) {
-    const file = e.target.files[0];
-    if (!file) return;
 
-    const docType = document.getElementById("verification-doc-type").value;
-    
-    this.showGeneralNoticeModal(
-      `<i class="fa-solid fa-spinner" style="animation: spin 1s infinite; color:var(--primary)"></i>`,
-      "OCR Verification in progress",
-      `Parsing layout boundaries for ${docType} document. Analyzing cryptographic watermark checks...`
-    );
-
-    setTimeout(async () => {
-      this.closeGeneralNoticeModal();
-      const list = document.getElementById("verification-doc-list");
-      const newItem = document.createElement("div");
-      newItem.style = "padding:16px; border:1px solid var(--border-color); border-radius:var(--radius-md); display:flex; justify-content:space-between; align-items:center; animation:fadeIn 0.3s ease;";
-      newItem.innerHTML = `
-        <div style="display:flex; gap:14px; align-items:center;">
-          <i class="fa-solid fa-file-signature text-primary" style="font-size:1.5rem;"></i>
-          <div>
-            <h4 style="font-size:0.9rem; font-weight:700;">Uploaded ${docType} Proof</h4>
-            <span style="font-size:0.75rem; color:var(--text-muted);">Uploaded Just now • Verified by AI OCR</span>
-          </div>
-        </div>
-        <span class="badge badge-success">VERIFIED</span>
-      `;
-      list.appendChild(newItem);
-      await this.addNotification("Identity Verified", `OCR parser verified your uploaded ${docType} document successfully.`, "success");
-    }, 2000);
-  }
-
-  // RETEST SLOT BOOKING SCREEN
-  renderRetestBooking() {
-    const calendar = document.querySelector(".calendar-grid");
-    const cells = calendar.querySelectorAll(".calendar-cell");
-    cells.forEach(c => c.remove());
-    
-    for (let day = 1; day <= 30; day++) {
-      const cell = document.createElement("div");
-      const isSunday = (day % 7 === 0);
-      const isPast = day < 15;
-
-      if (isPast || isSunday) {
-        cell.className = "calendar-cell muted";
-      } else {
-        cell.className = "calendar-cell available";
-        cell.onclick = () => {
-          calendar.querySelectorAll(".calendar-cell").forEach(c => c.classList.remove("active"));
-          cell.classList.add("active");
-          document.getElementById("retest-selected-date-lbl").innerText = `Booking Retest Date: ${day} June 2026`;
-        };
-      }
-      cell.innerText = day;
-      calendar.appendChild(cell);
-    }
-  }
-
-  selectSlot(btn) {
-    const container = document.getElementById("retest-slots-container");
-    container.querySelectorAll(".btn").forEach(b => b.className = "btn btn-secondary");
-    btn.className = "btn btn-secondary active";
-    btn.style.borderColor = "var(--primary)";
-  }
-
-  async bookRetest() {
-    const selectedDate = document.getElementById("retest-selected-date-lbl").innerText;
-    if (selectedDate.includes("Select a date")) {
-      alert("Please select an available date cell on the calendar grid first.");
-      return;
-    }
-
-    const user = this.currentUser;
-    
-    this.showGeneralNoticeModal(
-      `<i class="fa-solid fa-circle-check text-success"></i>`,
-      "Retest slot confirmed",
-      `Your booking request for ${selectedDate} has been locked. RTO inspector allocated.`
-    );
-
-    await this.addNotification("Retest Scheduled", `Retest slot scheduled for ${selectedDate.replace('Booking Retest Date: ', '')}.`, "warning");
-    await this.addAuditLog("Retest Booked", user.name, `Scheduled slot booking on ${selectedDate.replace('Booking Retest Date: ', '')}`);
-  }
 
   showGeneralNoticeModal(iconHtml, title, desc) {
     document.getElementById("general-notice-icon").outerHTML = `<div id="general-notice-icon" style="font-size:3rem; margin-bottom:20px;">${iconHtml}</div>`;
@@ -1438,12 +943,12 @@ class SmartDriveApp {
     document.getElementById("modal-candidate-title").innerText = "Register New Candidate";
     document.getElementById("modal-candidate-id").value = "";
     document.getElementById("cand-name").value = "";
-    document.getElementById("cand-app-no").value = "APP-2026-" + String(this.candidates.length + 1).padStart(3, '0');
-    document.getElementById("cand-dob").value = "2000-01-01";
-    document.getElementById("cand-ll-no").value = "KL-14/" + Math.floor(Math.random() * 20000 + 10000) + "/2026";
-    document.getElementById("cand-mobile").value = "9447" + Math.floor(Math.random() * 900000 + 100000);
+    document.getElementById("cand-app-no").value = "";
+    document.getElementById("cand-dob").value = "";
+    document.getElementById("cand-ll-no").value = "";
+    document.getElementById("cand-mobile").value = "";
     document.getElementById("cand-email").value = "";
-    document.getElementById("cand-test-date").value = new Date().toISOString().split('T')[0];
+    document.getElementById("cand-test-date").value = "";
 
     document.getElementById("modal-add-candidate").classList.add("active");
   }
@@ -1479,6 +984,45 @@ class SmartDriveApp {
     const mobile = document.getElementById("cand-mobile").value.trim();
     const email = document.getElementById("cand-email").value.trim();
     const testDate = document.getElementById("cand-test-date").value;
+
+    // Age validation (must be 18+)
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    if (age < 18) {
+      alert("Validation Failed: Candidate must be at least 18 years old.");
+      return;
+    }
+
+    // Driving test date validation (cannot be in the past)
+    const selectedDate = new Date(testDate);
+    const todayDateOnly = new Date();
+    todayDateOnly.setHours(0, 0, 0, 0);
+    selectedDate.setHours(0, 0, 0, 0);
+    
+    // Only enforce test date checks for new candidate registrations
+    if (!id && selectedDate < todayDateOnly) {
+      alert("Validation Failed: Driving test date cannot be in the past.");
+      return;
+    }
+
+    // Duplicate Application Number check
+    const duplicateApp = this.candidates.find(c => c.appNo === appNo && c.id !== id);
+    if (duplicateApp) {
+      alert(`Validation Failed: The Application Number "${appNo}" is already registered to candidate "${duplicateApp.name}".`);
+      return;
+    }
+
+    // Duplicate License Number check
+    const duplicateLL = this.candidates.find(c => c.llNo === llNo && c.id !== id);
+    if (duplicateLL) {
+      alert(`Validation Failed: The Learner's License Number "${llNo}" is already registered to candidate "${duplicateLL.name}".`);
+      return;
+    }
 
     try {
       if (useFirebase && db) {
@@ -1900,9 +1444,21 @@ class SmartDriveApp {
 
   renderProfileSettings() {
     const user = this.currentUser;
-    document.getElementById("profile-edit-name").value = user.name;
-    document.getElementById("profile-edit-mobile").value = user.mobile || "+91 9447201045";
-    document.getElementById("profile-edit-email").value = user.email || "candidate@gov.in";
+    const isCand = this.currentRole === "candidate";
+    
+    const nameGroup = document.getElementById("profile-name-group");
+    const mobileGroup = document.getElementById("profile-mobile-group");
+    
+    if (isCand) {
+      if (nameGroup) nameGroup.style.display = "block";
+      if (mobileGroup) mobileGroup.style.display = "block";
+      document.getElementById("profile-edit-name").value = user.name;
+      document.getElementById("profile-edit-mobile").value = user.mobile || "";
+    } else {
+      if (nameGroup) nameGroup.style.display = "none";
+      if (mobileGroup) mobileGroup.style.display = "none";
+    }
+    document.getElementById("profile-edit-email").value = user.email || "";
   }
 
   // SIDEBAR TOGGLE

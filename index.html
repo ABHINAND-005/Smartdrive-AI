@@ -46,21 +46,15 @@
             <div class="menu-item" onclick="app.route('candidate-results')" id="menu-candidate-results">
               <i class="fa-solid fa-square-poll-vertical"></i> <span data-lang="nav_results">Test Results</span>
             </div>
-            <div class="menu-item" onclick="app.route('candidate-video-review')" id="menu-candidate-video-review">
-              <i class="fa-solid fa-video"></i> <span data-lang="nav_video">Video Review</span>
-            </div>
+
             <div class="menu-item" onclick="app.route('candidate-feedback')" id="menu-candidate-feedback">
               <i class="fa-solid fa-brain"></i> <span data-lang="nav_feedback">AI Feedback</span>
             </div>
             <div class="menu-item" onclick="app.route('candidate-eligibility')" id="menu-candidate-eligibility">
               <i class="fa-solid fa-id-card"></i> <span data-lang="nav_eligibility">License Eligibility</span>
             </div>
-            <div class="menu-item" onclick="app.route('candidate-verification')" id="menu-candidate-verification">
-              <i class="fa-solid fa-file-shield"></i> <span data-lang="nav_verification">Document Verification</span>
-            </div>
-            <div class="menu-item" onclick="app.route('candidate-retest')" id="menu-candidate-retest">
-              <i class="fa-solid fa-calendar-check"></i> <span data-lang="nav_retest">Schedule Retest</span>
-            </div>
+
+
           </div>
 
           <!-- Admin Links (Visible when logged in as Admin) -->
@@ -144,8 +138,7 @@
           <!-- 2. DRIVING TEST RESULTS (Violations & Detailed Cards) -->
           <div id="screen-candidate-results" class="dashboard-view animate-fade" style="display: none;"></div>
 
-          <!-- 3. VIDEO REVIEW PAGE (Timeline and Canvas Simulator) -->
-          <div id="screen-candidate-video-review" class="dashboard-view animate-fade" style="display: none;"></div>
+
 
           <!-- 4. AI FEEDBACK & RECOMMENDATIONS -->
           <div id="screen-candidate-feedback" class="dashboard-view animate-fade" style="display: none;"></div>
@@ -153,11 +146,9 @@
           <!-- 5. LICENSE ELIGIBILITY PAGE -->
           <div id="screen-candidate-eligibility" class="dashboard-view animate-fade" style="display: none;"></div>
 
-          <!-- 6. DOCUMENT VERIFICATION PAGE -->
-          <div id="screen-candidate-verification" class="dashboard-view animate-fade" style="display: none;"></div>
 
-          <!-- 7. RETEST BOOKING PAGE -->
-          <div id="screen-candidate-retest" class="dashboard-view animate-fade" style="display: none;"></div>
+
+
 
           <!-- 8. ADMIN DASHBOARD -->
           <div id="screen-admin-dashboard" class="dashboard-view animate-fade" style="display: none;"></div>
@@ -209,11 +200,11 @@
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
             <div class="form-group">
               <label>Full Name</label>
-              <input type="text" id="cand-name" class="form-control" required placeholder="Abhinand S">
+              <input type="text" id="cand-name" class="form-control" required>
             </div>
             <div class="form-group">
               <label>Application Number</label>
-              <input type="text" id="cand-app-no" class="form-control" required placeholder="APP-2026-001">
+              <input type="text" id="cand-app-no" class="form-control" required>
             </div>
           </div>
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
@@ -223,17 +214,17 @@
             </div>
             <div class="form-group">
               <label>Learners License (LL) No</label>
-              <input type="text" id="cand-ll-no" class="form-control" required placeholder="KL-14/10452/2026">
+              <input type="text" id="cand-ll-no" class="form-control" required>
             </div>
           </div>
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
             <div class="form-group">
               <label>Mobile Number</label>
-              <input type="tel" id="cand-mobile" class="form-control" required placeholder="9447201045">
+              <input type="tel" id="cand-mobile" class="form-control" required>
             </div>
             <div class="form-group">
               <label>Email Address</label>
-              <input type="email" id="cand-email" class="form-control" required placeholder="candidate@gmail.com">
+              <input type="email" id="cand-email" class="form-control">
             </div>
           </div>
           <div class="form-group">

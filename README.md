@@ -13,7 +13,6 @@ The system analyzes driving test videos, detects violations, calculates scores, 
 * View Driving Test Results & Pass/Fail Status
 * Check License Eligibility with secure QR verification
 * View Detected Violations mapped to timestamps
-* Watch Driving Test Video (Interactive vehicle path tracking canvas simulator)
 * Download Evaluation Reports (print layout optimization)
 * Receive AI-generated feedback & driving recommendations
 * Multi-language support (English & Malayalam)
@@ -29,14 +28,9 @@ The system analyzes driving test videos, detects violations, calculates scores, 
 * Track test failure hotspots with SVG track diagrams
 
 ### AI & Simulation Features
-* Time-synchronized indicator signaling & vehicle coordinates mapping
 * Lane tracking & Boundary crossing detection
 * Driving behavior analytics & automatic score calculations
 * Pass/Fail predictions with AI confidence intervals
-<<<<<<< HEAD
-=======
-* Conversational AI Assistant Copilot widget for candidate support
->>>>>>> cb963edde93df09653ac0a6a0747299a90563e79
 
 ---
 
@@ -72,11 +66,8 @@ smartdrive-ai/
 │   ├── admin-login.html
 │   ├── candidate-dashboard.html
 │   ├── candidate-results.html
-│   ├── candidate-video-review.html
 │   ├── candidate-feedback.html
 │   ├── candidate-eligibility.html
-│   ├── candidate-verification.html
-│   ├── candidate-retest.html
 │   ├── admin-dashboard.html
 │   ├── admin-candidates.html
 │   ├── admin-video-evaluation.html
@@ -91,7 +82,6 @@ smartdrive-ai/
 ├── database.json          # Simulated database storage
 ├── firestore.rules        # Security rules for optional Firebase integration
 └── README.md              # Project documentation
-<<<<<<< HEAD
 ```
 
 ---
@@ -131,5 +121,3 @@ smartdrive-ai/
 ## 🎯 Objective
 
 To improve transparency, reduce manual errors, and provide a fair and automated driving test evaluation process using Artificial Intelligence.
-=======
->>>>>>> cb963edde93df09653ac0a6a0747299a90563e79

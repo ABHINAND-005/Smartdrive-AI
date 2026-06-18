@@ -1,0 +1,66 @@
+[debug] [2026-06-17T06:58:31.884Z] ----------------------------------------------------------------------
+[debug] [2026-06-17T06:58:31.886Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\abhia\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js init
+[debug] [2026-06-17T06:58:31.886Z] CLI Version:   15.20.0
+[debug] [2026-06-17T06:58:31.886Z] Platform:      win32
+[debug] [2026-06-17T06:58:31.886Z] Node Version:  v22.14.0
+[debug] [2026-06-17T06:58:31.886Z] Time:          Wed Jun 17 2026 12:28:31 GMT+0530 (India Standard Time)
+[debug] [2026-06-17T06:58:31.886Z] ----------------------------------------------------------------------
+[debug] 
+[info] 
+     ######## #### ########  ######## ########     ###     ######  ########
+     ##        ##  ##     ## ##       ##     ##  ##   ##  ##       ##
+     ######    ##  ########  ######   ########  #########  ######  ######
+     ##        ##  ##    ##  ##       ##     ## ##     ##       ## ##
+     ##       #### ##     ## ######## ########  ##     ##  ######  ########
+
+You're about to initialize a Firebase project in this directory:
+
+  C:\Users\abhia\.gemini\antigravity\scratch\smartdrive-ai
+
+[info] 
+=== Project Setup
+[info] 
+[info] First, let's associate this project directory with a Firebase project.
+[info] You can create multiple project aliases by running firebase use --add, 
+[info] 
+[debug] [2026-06-17T06:59:30.098Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-06-17T06:59:30.098Z] > authorizing via signed-in user (abhiabhinand005@gmail.com)
+[debug] [2026-06-17T06:59:30.100Z] Checked if tokens are valid: true, expires at: 1781683093090
+[debug] [2026-06-17T06:59:30.100Z] Checked if tokens are valid: true, expires at: 1781683093090
+[debug] [2026-06-17T06:59:30.102Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects pageSize=100
+[debug] [2026-06-17T06:59:41.597Z] *** [apiv2] error from fetch(https://firebase.googleapis.com/v1beta1/projects?pageSize=100, {"headers":{},"method":"GET","signal":{"reason":""}}): FetchError: request to https://firebase.googleapis.com/v1beta1/projects?pageSize=100 failed, reason: getaddrinfo ENOTFOUND firebase.googleapis.com
+[debug] [2026-06-17T06:59:41.598Z] Failed to make request to https://firebase.googleapis.com/v1beta1/projects?pageSize=100
+[debug] [2026-06-17T06:59:46.614Z] Error: Timed out.
+    at Timeout._onTimeout (C:\Users\abhia\AppData\Roaming\npm\node_modules\firebase-tools\lib\utils.js:310:49)
+    at listOnTimeout (node:internal/timers:594:17)
+    at process.processTimers (node:internal/timers:529:7)
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2026-06-17T06:59:54.858Z] ----------------------------------------------------------------------
+[debug] [2026-06-17T06:59:54.860Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\abhia\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js init
+[debug] [2026-06-17T06:59:54.860Z] CLI Version:   15.20.0
+[debug] [2026-06-17T06:59:54.860Z] Platform:      win32
+[debug] [2026-06-17T06:59:54.860Z] Node Version:  v22.14.0
+[debug] [2026-06-17T06:59:54.860Z] Time:          Wed Jun 17 2026 12:29:54 GMT+0530 (India Standard Time)
+[debug] [2026-06-17T06:59:54.860Z] ----------------------------------------------------------------------
+[debug] 
+[info] 
+     ######## #### ########  ######## ########     ###     ######  ########
+     ##        ##  ##     ## ##       ##     ##  ##   ##  ##       ##
+     ######    ##  ########  ######   ########  #########  ######  ######
+     ##        ##  ##    ##  ##       ##     ## ##     ##       ## ##
+     ##       #### ##     ## ######## ########  ##     ##  ######  ########
+
+You're about to initialize a Firebase project in this directory:
+
+  C:\Users\abhia\.gemini\antigravity\scratch\smartdrive-ai
+
+[info] 
+=== Project Setup
+[info] 
+[info] First, let's associate this project directory with a Firebase project.
+[info] You can create multiple project aliases by running firebase use --add, 
+[info] 
+[info] i  If you want to create a project in a Google Cloud organization or folder, please use "firebase projects:create" instead, and return to this command when you've created the project. 
+[debug] [2026-06-17T07:00:19.823Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-06-17T07:00:19.824Z] > authorizing via signed-in user (abhiabhinand005@gmail.com)
