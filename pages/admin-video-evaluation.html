@@ -104,10 +104,12 @@
     <div>
       <h3 style="margin-bottom:12px;">Computer Vision Checkpoints</h3>
       <ul style="font-size:0.85rem; color:var(--text-sub); display:flex; flex-direction:column; gap:12px; padding-left:16px;">
-        <li><strong>Boundary Checks:</strong> Vehicles crossing yellow track limits incur -10 points.</li>
-        <li><strong>Stalls Check:</strong> Stop over 6 seconds triggers a vehicle stall warning.</li>
-        <li><strong>Indicator Checks:</strong> Direction changes require pre-indicator signals.</li>
-        <li><strong>Reverse Checks:</strong> Shift back speed must not exceed 8 km/h.</li>
+        <li><strong>Dynamic Track Calibration:</strong> Automatically maps the mathematical polygon of the H-track on the first frame and adapts to both horizontal and vertical camera orientations.</li>
+        <li><strong>Entry Gate Locking:</strong> Analyzes the vehicle's initial track overlap to permanently lock the specific entry prong as the sole legally permitted exit door.</li>
+        <li><strong>Sequential Path Verification:</strong> Enforces the official 5-step RTO corner sequence (e.g., TR -> TL -> BR -> BL -> TR), utilizing a 20% central deadzone to prevent false-positives while driving straight.</li>
+        <li><strong>Strict Boundary Checks:</strong> Requires the vehicle to maintain >95% track overlap; touching or crossing the outer limits outside the designated safe gate triggers an instant wall collision foul.</li>
+        <li><strong>Early Exit Detection:</strong> Triggers an automatic failure if the vehicle completely leaves the track geometry before successfully logging all required path checkpoints.</li>
+
       </ul>
     </div>
 
