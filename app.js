@@ -153,6 +153,7 @@ class SmartDriveApp {
       { id: "screen-candidate-eligibility", path: "pages/candidate-eligibility.html" },
       { id: "screen-admin-dashboard", path: "pages/admin-dashboard.html" },
       { id: "screen-admin-candidates", path: "pages/admin-candidates.html" },
+      { id: "screen-admin-candidate-profile", path: "pages/admin-candidate-profile.html" },
       { id: "screen-admin-video-evaluation", path: "pages/admin-video-evaluation.html" },
       { id: "screen-admin-result-override", path: "pages/admin-result-override.html" },
       { id: "screen-admin-reports-analytics", path: "pages/admin-reports-analytics.html" },
@@ -357,6 +358,9 @@ class SmartDriveApp {
     } else if (screenId === "admin-dashboard") {
       document.getElementById("current-screen-title").innerText = "Admin Portal Dashboard";
       this.renderAdminDashboard();
+    } else if (screenId === "admin-candidate-profile") {
+      document.getElementById("current-screen-title").innerText = "Candidate Profile Review";
+      this.renderAdminCandidateProfile();
     } else if (screenId === "admin-candidates") {
       document.getElementById("current-screen-title").innerText = "Candidate Registry Control";
       this.renderCandidatesCRUD();
@@ -1102,11 +1106,90 @@ class SmartDriveApp {
     const c = this.candidates.find(item => item.id === id);
     if (!c) return;
 
-    this.currentUser = c;
-    this.currentRole = "candidate";
-    this.setupDashboardView();
+    this.selectedCandidate = c;
+    this.currentRole = "admin";
     this.showScreen("app-layout");
-    this.route("candidate-dashboard");
+    this.route("admin-candidate-profile");
+  }
+
+  renderAdminCandidateProfile() {
+    const cand = this.selectedCandidate;
+    if (!cand) return;
+
+    const profileTitle = document.getElementById("admin-candidate-profile-title");
+    if (profileTitle) profileTitle.innerText = cand.name;
+
+    const profileBadge = document.getElementById("admin-candidate-profile-status");
+    if (profileBadge) {
+      const badgeClass = cand.status === "Passed" ? "badge-success" : cand.status === "Failed" ? "badge-danger" : "badge-warning";
+      profileBadge.className = `badge ${badgeClass}`;
+      profileBadge.innerText = cand.status;
+    }
+
+    const details = [
+      ["admin-candidate-app-no", cand.appNo],
+      ["admin-candidate-dob", cand.dob],
+      ["admin-candidate-ll-no", cand.llNo],
+      ["admin-candidate-mobile", cand.mobile],
+      ["admin-candidate-email", cand.email],
+      ["admin-candidate-test-date", cand.testDate],
+      ["admin-candidate-score", `${cand.score}`],
+      ["admin-candidate-confidence", `${cand.aiConfidence}%`],
+      ["admin-candidate-eligibility", cand.eligibility],
+      ["admin-candidate-officer", cand.officerName || "Inspector K. Raghavan"],
+      ["admin-candidate-remarks", cand.officerRemarks],
+      ["admin-candidate-rating", cand.driverRating],
+      ["admin-candidate-rating-desc", cand.driverRatingDesc],
+      ["admin-candidate-retest", cand.retestDate || "Not scheduled"]
+    ];
+
+    details.forEach(([id, value]) => {
+      const el = document.getElementById(id);
+      if (el) el.innerText = value;
+    });
+
+    const strengths = document.getElementById("admin-candidate-strengths");
+    if (strengths) {
+      strengths.innerHTML = cand.strengths.length
+        ? cand.strengths.map(item => `<li>${item}</li>`).join("")
+        : `<li>No strengths recorded.</li>`;
+    }
+
+    const weaknesses = document.getElementById("admin-candidate-weaknesses");
+    if (weaknesses) {
+      weaknesses.innerHTML = cand.weaknesses.length
+        ? cand.weaknesses.map(item => `<li>${item}</li>`).join("")
+        : `<li>No weaknesses recorded.</li>`;
+    }
+
+    const violations = document.getElementById("admin-candidate-violations");
+    if (violations) {
+      violations.innerHTML = "";
+      if (cand.violations.length === 0) {
+        violations.innerHTML = `<div style="padding:16px; border:1px solid var(--border-color); border-radius:var(--radius-md); color:var(--text-sub);">No violations recorded for this candidate.</div>`;
+      } else {
+        cand.violations.forEach(v => {
+          const item = document.createElement("div");
+          item.className = "violation-card-item";
+          item.innerHTML = `
+            <div class="violation-card-icon">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="violation-card-info">
+              <div class="violation-card-title">
+                ${v.name}
+                <span>Time: 00:${String(v.time).padStart(2, "0")}</span>
+              </div>
+              <div style="font-size:0.75rem; font-weight:700; margin-bottom:4px;" class="${v.severity === 'Critical' ? 'text-danger' : 'text-warning'}">
+                Severity: ${v.severity}
+              </div>
+              <p style="font-size:0.85rem; color:var(--text-sub);">${v.description}</p>
+            </div>
+          `;
+          violations.appendChild(item);
+        });
+      }
+    }
   }
 
   // VIDEO UPLOAD & AI SIMULATOR

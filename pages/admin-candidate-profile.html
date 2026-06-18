@@ -1,0 +1,154 @@
+<style>
+/* Admin Candidate Profile Screen */
+.profile-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.profile-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.profile-meta-card {
+  padding: 16px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+}
+
+.profile-meta-card .label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.profile-meta-card .value {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+  word-break: break-word;
+}
+
+.profile-section-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.profile-section-list ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--text-sub);
+  line-height: 1.6;
+}
+
+.profile-section-list li + li {
+  margin-top: 6px;
+}
+
+.profile-back-btn {
+  white-space: nowrap;
+}
+
+@media (max-width: 1100px) {
+  .profile-meta-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .profile-header-row {
+    flex-direction: column;
+  }
+
+  .profile-meta-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+<div class="card">
+  <div class="profile-header-row">
+    <div>
+      <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; margin-bottom:8px;">Admin Candidate Profile</div>
+      <h2 id="admin-candidate-profile-title" style="margin:0 0 8px 0;">Candidate Name</h2>
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <span class="badge badge-success" id="admin-candidate-profile-status">Passed</span>
+        <span style="font-size:0.85rem; color:var(--text-sub);">Reviewing candidate details inside the admin account</span>
+      </div>
+    </div>
+    <button class="btn btn-secondary profile-back-btn" onclick="app.route('admin-dashboard')">
+      <i class="fa-solid fa-arrow-left"></i> Back to Admin Dashboard
+    </button>
+  </div>
+
+  <div class="profile-meta-grid">
+    <div class="profile-meta-card"><span class="label">Application No</span><span class="value" id="admin-candidate-app-no">-</span></div>
+    <div class="profile-meta-card"><span class="label">DOB</span><span class="value" id="admin-candidate-dob">-</span></div>
+    <div class="profile-meta-card"><span class="label">Learner License</span><span class="value" id="admin-candidate-ll-no">-</span></div>
+    <div class="profile-meta-card"><span class="label">Mobile</span><span class="value" id="admin-candidate-mobile">-</span></div>
+    <div class="profile-meta-card"><span class="label">Email</span><span class="value" id="admin-candidate-email">-</span></div>
+    <div class="profile-meta-card"><span class="label">Test Date</span><span class="value" id="admin-candidate-test-date">-</span></div>
+    <div class="profile-meta-card"><span class="label">Score</span><span class="value" id="admin-candidate-score">-</span></div>
+    <div class="profile-meta-card"><span class="label">AI Confidence</span><span class="value" id="admin-candidate-confidence">-</span></div>
+  </div>
+</div>
+
+<div class="grid-cols-2" style="margin-top:20px;">
+  <div class="card">
+    <h3 style="margin-bottom:16px;"><i class="fa-solid fa-user-pen"></i> Officer Review</h3>
+    <div class="profile-section-list">
+      <div>
+        <div style="font-size:0.8rem; color:var(--text-muted); font-weight:700; text-transform:uppercase; margin-bottom:6px;">Eligibility</div>
+        <div id="admin-candidate-eligibility" style="font-weight:700;">-</div>
+      </div>
+      <div>
+        <div style="font-size:0.8rem; color:var(--text-muted); font-weight:700; text-transform:uppercase; margin-bottom:6px;">Inspector</div>
+        <div id="admin-candidate-officer" style="font-weight:700;">-</div>
+      </div>
+      <div>
+        <div style="font-size:0.8rem; color:var(--text-muted); font-weight:700; text-transform:uppercase; margin-bottom:6px;">Remarks</div>
+        <div id="admin-candidate-remarks" style="line-height:1.6; color:var(--text-sub);">-</div>
+      </div>
+      <div>
+        <div style="font-size:0.8rem; color:var(--text-muted); font-weight:700; text-transform:uppercase; margin-bottom:6px;">Driver Rating</div>
+        <div id="admin-candidate-rating" style="font-weight:700;">-</div>
+        <div id="admin-candidate-rating-desc" style="line-height:1.6; color:var(--text-sub); margin-top:6px;">-</div>
+      </div>
+      <div>
+        <div style="font-size:0.8rem; color:var(--text-muted); font-weight:700; text-transform:uppercase; margin-bottom:6px;">Retest Date</div>
+        <div id="admin-candidate-retest" style="font-weight:700;">-</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-bottom:16px;"><i class="fa-solid fa-list-check"></i> Strengths & Weaknesses</h3>
+    <div class="grid-cols-2" style="gap:20px;">
+      <div>
+        <h4 style="margin-bottom:10px; font-size:0.95rem;">Strengths</h4>
+        <ul id="admin-candidate-strengths"></ul>
+      </div>
+      <div>
+        <h4 style="margin-bottom:10px; font-size:0.95rem;">Weaknesses</h4>
+        <ul id="admin-candidate-weaknesses"></ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card" style="margin-top:20px;">
+  <div class="card-title-bar">
+    <h3><i class="fa-solid fa-triangle-exclamation text-danger"></i> Violations Timeline</h3>
+    <span class="badge badge-danger">Detected Events</span>
+  </div>
+  <div id="admin-candidate-violations" style="display:flex; flex-direction:column; gap:12px;"></div>
+</div>
