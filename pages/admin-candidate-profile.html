@@ -152,3 +152,45 @@
   </div>
   <div id="admin-candidate-violations" style="display:flex; flex-direction:column; gap:12px;"></div>
 </div>
+
+<!-- AI Assessment Panel (also visible on candidate profile) -->
+<div class="card" style="margin-top:20px;">
+  <div class="card-title-bar">
+    <h3><i class="fa-solid fa-robot"></i> Generated AI Result Assessment</h3>
+    <span class="badge badge-info">AI Report</span>
+  </div>
+
+  <div style="display:flex; gap:20px; align-items:flex-start;">
+    <div style="flex:1; min-width:300px;">
+      <div style="padding:18px; border:1px solid var(--border-color); border-radius:8px; background:var(--bg-card); display:flex; justify-content:space-between; align-items:center; gap:12px;">
+        <div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">AI CALCULATED SCORE</div>
+          <div id="admin-candidate-assessment-score" style="font-size:2.2rem; font-weight:800;">-</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:0.75rem; color:var(--text-muted);">AI DECISION</div>
+          <div id="admin-candidate-assessment-decision" class="badge badge-warning" style="font-weight:800; margin-top:6px; display:inline-block;">-</div>
+          <div style="font-size:0.75rem; color:var(--text-muted); margin-top:8px;">CONFIDENCE</div>
+          <div id="admin-candidate-assessment-confidence" style="font-weight:700; margin-top:6px;">-</div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;">
+        <div style="font-size:0.8rem; color:var(--text-muted); font-weight:700; text-transform:uppercase; margin-bottom:6px;">Manual Officer Remarks</div>
+        <textarea id="admin-candidate-assessment-remarks" style="width:100%; min-height:100px; padding:12px; border:1px solid var(--border-color); border-radius:8px;" placeholder="Optional override explanation"></textarea>
+      </div>
+
+      <div style="display:flex; gap:12px; margin-top:12px;">
+        <button class="btn btn-secondary" onclick="app.overrideAIResult(app.selectedCandidate.id)"><i class="fa-solid fa-sliders"></i> Override</button>
+        <button class="btn btn-primary" onclick="app.publishCandidateResult(app.selectedCandidate.id)"><i class="fa-solid fa-upload"></i> Publish Final Result</button>
+      </div>
+    </div>
+
+    <div style="width:320px;">
+      <h4 style="margin:0 0 8px 0; font-size:0.95rem;">Decisive Violations Logs</h4>
+      <div id="admin-candidate-assessment-violations" style="padding:12px; border:1px solid var(--border-color); border-radius:8px; min-height:120px; background:var(--bg-card);">
+        <!-- violations summary rendered by app.js -->
+      </div>
+    </div>
+  </div>
+</div>

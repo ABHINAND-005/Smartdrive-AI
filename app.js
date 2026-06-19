@@ -809,6 +809,7 @@ class SmartDriveApp {
         <td><span class="badge ${badgeClass}">${c.status}</span></td>
         <td class="table-action-row">
           <button class="table-action-btn" onclick="app.viewCandidateProfile('${c.id}')" title="View Detail"><i class="fa-solid fa-eye"></i></button>
+          <button class="table-action-btn" onclick="app.overrideAIResult('${c.id}')" title="Override decision"><i class="fa-solid fa-sliders"></i></button>
           <button class="table-action-btn" onclick="app.openEditCandidateModal('${c.id}')" title="Edit Registry"><i class="fa-solid fa-pen-to-square"></i></button>
           <button class="table-action-btn delete" onclick="app.deleteCandidate('${c.id}')" title="Delete Candidate"><i class="fa-solid fa-trash-can"></i></button>
         </td>
@@ -841,7 +842,8 @@ class SmartDriveApp {
         <td>${c.testDate}</td>
         <td><span class="badge ${badgeClass}">${c.status}</span></td>
         <td class="table-action-row">
-          <button class="table-action-btn" onclick="app.viewCandidateProfile('${c.id}')"><i class="fa-solid fa-eye"></i></button>
+          <button class="table-action-btn" onclick="app.viewCandidateProfile('${c.id}')" title="View detail"><i class="fa-solid fa-eye"></i></button>
+          <button class="table-action-btn" onclick="app.overrideAIResult('${c.id}')" title="Override decision"><i class="fa-solid fa-sliders"></i></button>
           <button class="table-action-btn" onclick="app.openEditCandidateModal('${c.id}')"><i class="fa-solid fa-pen-to-square"></i></button>
           <button class="table-action-btn delete" onclick="app.deleteCandidate('${c.id}')"><i class="fa-solid fa-trash-can"></i></button>
         </td>
@@ -1097,6 +1099,43 @@ class SmartDriveApp {
         });
       }
     }
+
+    // Populate AI assessment panel fields on profile (if present)
+    const aScore = document.getElementById("admin-candidate-assessment-score");
+    if (aScore) aScore.innerText = cand.score !== undefined ? cand.score : "-";
+
+    const aDecision = document.getElementById("admin-candidate-assessment-decision");
+    if (aDecision) {
+      const status = cand.status || "Pending";
+      let cls = "badge-warning";
+      if (status === "Passed") cls = "badge-success";
+      else if (status === "Failed") cls = "badge-danger";
+      aDecision.className = `badge ${cls}`;
+      aDecision.innerText = status;
+    }
+
+    const aConf = document.getElementById("admin-candidate-assessment-confidence");
+    if (aConf) aConf.innerText = cand.aiConfidence ? `${cand.aiConfidence}%` : "-";
+
+    const aRemarks = document.getElementById("admin-candidate-assessment-remarks");
+    if (aRemarks) aRemarks.value = cand.officerRemarks || "";
+
+    const aViolations = document.getElementById("admin-candidate-assessment-violations");
+    if (aViolations) {
+      aViolations.innerHTML = "";
+      if (!cand.violations || cand.violations.length === 0) {
+        aViolations.innerHTML = `<div style="color:var(--text-sub);">No violations recorded.</div>`;
+      } else {
+        cand.violations.forEach(v => {
+          aViolations.innerHTML += `
+            <div style="padding:8px; border-bottom:1px dashed var(--border-color); display:flex; justify-content:space-between; align-items:center; gap:8px;">
+              <div style="font-size:0.9rem;"><strong>${v.name}</strong><div style="font-size:0.8rem; color:var(--text-muted)">Time: s${v.time} • ${v.description}</div></div>
+              <span class="badge ${v.severity === 'Critical' ? 'badge-danger' : 'badge-warning'}">${v.severity}</span>
+            </div>
+          `;
+        });
+      }
+    }
   }
 
   // VIDEO UPLOAD & AI SIMULATOR
@@ -1343,6 +1382,41 @@ class SmartDriveApp {
 
       alert("Result override saved and published successfully.");
       this.route("admin-dashboard");
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  // Publish current candidate result from profile (mark officerApproved and persist remarks)
+  async publishCandidateResult(candidateId) {
+    const cand = this.candidates.find(c => c.id === candidateId);
+    if (!cand) return;
+
+    const remarksEl = document.getElementById("admin-candidate-assessment-remarks");
+    const officerRemarks = remarksEl ? remarksEl.value : cand.officerRemarks;
+
+    const modified = {
+      officerRemarks,
+      officerApproved: true,
+      officerName: cand.officerName || "Inspector K. Raghavan",
+      testDate: new Date().toISOString().split('T')[0]
+    };
+
+    try {
+      if (useFirebase && db) {
+        await fb.updateDoc(fb.doc(db, "candidates", candidateId), modified);
+      } else {
+        const idx = this.candidates.findIndex(x => x.id === candidateId);
+        if (idx >= 0) {
+          this.candidates[idx] = { ...this.candidates[idx], ...modified };
+          this.saveOfflineFallback();
+        }
+      }
+
+      await this.addNotification("Result Published", `Final result published for candidate ${cand.name} (${cand.appNo}).`, "info");
+      alert("Final result published and persisted.");
+      await this.fetchData();
+      this.renderAdminCandidateProfile();
     } catch (err) {
       console.error(err);
     }
