@@ -14,6 +14,18 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
 </head>
 <body>
+  <!-- ================= SESSION RESTORATION BLOCKER ================= -->
+  <script>
+    // Check if user session exists before rendering the landing page
+    const savedUser = localStorage.getItem("sd_current_user");
+    const savedRole = localStorage.getItem("sd_current_role");
+    if (savedUser && savedRole) {
+      // Hide landing screen and show app layout to prevent flash
+      const style = document.createElement('style');
+      style.textContent = '#screen-landing { display: none !important; } #app-layout { display: flex !important; }';
+      document.head.appendChild(style);
+    }
+  </script>
 
   <!-- ================= LANDING PAGE ================= -->
   <div id="screen-landing" class="app-screen active"></div>
@@ -47,9 +59,6 @@
               <i class="fa-solid fa-square-poll-vertical"></i> <span data-lang="nav_results">Test Results</span>
             </div>
 
-            <div class="menu-item" onclick="app.route('candidate-feedback')" id="menu-candidate-feedback">
-              <i class="fa-solid fa-brain"></i> <span data-lang="nav_feedback">AI Feedback</span>
-            </div>
             <div class="menu-item" onclick="app.route('candidate-eligibility')" id="menu-candidate-eligibility">
               <i class="fa-solid fa-id-card"></i> <span data-lang="nav_eligibility">License Eligibility</span>
             </div>
@@ -70,10 +79,7 @@
               <i class="fa-solid fa-cloud-arrow-up"></i> Video Upload & AI
             </div>
             <div class="menu-item" onclick="app.route('admin-reports-analytics')" id="menu-admin-reports-analytics">
-              <i class="fa-solid fa-chart-line"></i> Analytics & Heatmaps
-            </div>
-            <div class="menu-item" onclick="app.route('admin-audit-logs')" id="menu-admin-audit-logs">
-              <i class="fa-solid fa-receipt"></i> System Audit Logs
+              <i class="fa-solid fa-chart-line"></i> Analytics
             </div>
           </div>
 
@@ -140,10 +146,7 @@
 
 
 
-          <!-- 4. AI FEEDBACK & RECOMMENDATIONS -->
-          <div id="screen-candidate-feedback" class="dashboard-view animate-fade" style="display: none;"></div>
-
-          <!-- 5. LICENSE ELIGIBILITY PAGE -->
+          <!-- 4. LICENSE ELIGIBILITY PAGE -->
           <div id="screen-candidate-eligibility" class="dashboard-view animate-fade" style="display: none;"></div>
 
 
@@ -165,10 +168,7 @@
           <!-- 12. REPORTS & ANALYTICS (Charts & Heatmap) -->
           <div id="screen-admin-reports-analytics" class="dashboard-view animate-fade" style="display: none;"></div>
 
-          <!-- 13. SYSTEM AUDIT LOGS -->
-          <div id="screen-admin-audit-logs" class="dashboard-view animate-fade" style="display: none;"></div>
-
-          <!-- 14. PROFILE & APP SETTINGS -->
+          <!-- 13. PROFILE & APP SETTINGS -->
           <div id="screen-profile-settings" class="dashboard-view animate-fade" style="display: none;"></div>
         </div>
       </div>

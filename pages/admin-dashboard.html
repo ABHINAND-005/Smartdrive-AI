@@ -1,10 +1,3 @@
-<style>
-/* Admin Dashboard Performance Animations */
-#admin-metric-passrate-bar {
-  transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-</style>
-
 <!-- Admin Stats Cards -->
 <div class="grid-cols-4">
   <div class="card stat-card">
@@ -70,30 +63,6 @@
 
   <!-- Pass Rate summary & accuracy -->
   <div style="display:flex; flex-direction:column; gap:20px;">
-    <div class="card">
-      <h3 style="margin-bottom:16px;">RTO Performance Metrics</h3>
-      <div style="display:flex; flex-direction:column; gap:16px;">
-        <div>
-          <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:6px;">
-            <span>Pass Percentage</span>
-            <strong id="admin-metric-passrate">70.2%</strong>
-          </div>
-          <div style="height:8px; background-color:var(--bg-main); border-radius:4px; overflow:hidden;">
-            <div style="height:100%; background-color:var(--success); width:70%" id="admin-metric-passrate-bar"></div>
-          </div>
-        </div>
-        <div>
-          <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:6px;">
-            <span>AI Accuracy Confidence</span>
-            <strong>97.8%</strong>
-          </div>
-          <div style="height:8px; background-color:var(--bg-main); border-radius:4px; overflow:hidden;">
-            <div style="height:100%; background-color:var(--primary); width:97.8%"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <div class="card" style="display:flex; flex-direction:column; justify-content:space-between;">
       <div>
         <h3 style="margin-bottom:12px;">Evaluation Center</h3>

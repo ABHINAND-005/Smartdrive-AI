@@ -277,14 +277,29 @@
     </div>
     <div class="features-grid">
       <div class="feature-card">
-        <div class="feature-icon"><i class="fa-solid fa-eye"></i></div>
-        <h3>Smart Path Tracking</h3>
-        <p>High-speed computer vision models map boundaries, tracking reverse maneuvers and gradient stops down to centimeters.</p>
+        <div class="feature-icon"><i class="fa-solid fa-location-crosshairs"></i></div>
+        <h3>Dynamic Track Calibration</h3>
+        <p>Automatically maps the mathematical polygon of the H-track on the first frame and adapts to both horizontal and vertical camera orientations.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fa-solid fa-gate"></i></div>
+        <h3>Entry Gate Locking</h3>
+        <p>Analyzes the vehicle's initial track overlap to permanently lock the specific entry prong as the sole legally permitted exit door.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fa-solid fa-route"></i></div>
+        <h3>Sequential Path Verification</h3>
+        <p>Enforces the official 5-step RTO corner sequence utilizing a 20% central deadzone to prevent false-positives while driving straight.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fa-solid fa-shield"></i></div>
+        <h3>Strict Boundary Checks</h3>
+        <p>Requires the vehicle to maintain >95% track overlap; touching or crossing outer limits triggers an instant wall collision foul.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
-        <h3>Instant Violations Detection</h3>
-        <p>Automated boundary crossing, vehicle stall indicators, indicators miss-usage, and reverse speed check alerts logged instantly.</p>
+        <h3>Early Exit Detection</h3>
+        <p>Triggers automatic failure if the vehicle completely leaves the track geometry before successfully logging all required path checkpoints.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon"><i class="fa-solid fa-stamp"></i></div>

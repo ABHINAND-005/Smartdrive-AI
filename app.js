@@ -83,7 +83,6 @@ class SmartDriveApp {
     this.currentUser = null;
     this.currentRole = null;
     this.candidates = [];
-    this.auditLogs = [];
     this.notifications = [];
     
     // Video Simulation States
@@ -113,6 +112,14 @@ class SmartDriveApp {
     this.currentLang = localStorage.getItem("sd_lang") || "en";
     this.applyTheme();
 
+    // Restore user session from localStorage immediately if it exists
+    const savedUser = localStorage.getItem("sd_current_user");
+    const savedRole = localStorage.getItem("sd_current_role");
+    if (savedUser && savedRole) {
+      this.currentUser = JSON.parse(savedUser);
+      this.currentRole = savedRole;
+    }
+
     // Dynamically load page template fragments
     await this.loadTemplates();
 
@@ -135,8 +142,14 @@ class SmartDriveApp {
       this.loadOfflineFallback();
     }
 
+    // Setup dashboard if session was restored
+    if (this.currentUser && this.currentRole) {
+      this.setupDashboardView();
+      this.showScreen("app-layout");
+      this.route(this.currentRole === "admin" ? "admin-dashboard" : "candidate-dashboard");
+    }
+
     this.renderNotifications();
-    this.renderAuditLogs();
     
     document.getElementById("landing-stat-total").innerText = "14,250+";
     document.getElementById("landing-stat-rate").innerText = "72.4%";
@@ -149,14 +162,12 @@ class SmartDriveApp {
       { id: "screen-admin-login", path: "pages/admin-login.html" },
       { id: "screen-candidate-dashboard", path: "pages/candidate-dashboard.html" },
       { id: "screen-candidate-results", path: "pages/candidate-results.html" },
-      { id: "screen-candidate-feedback", path: "pages/candidate-feedback.html" },
       { id: "screen-candidate-eligibility", path: "pages/candidate-eligibility.html" },
       { id: "screen-admin-dashboard", path: "pages/admin-dashboard.html" },
       { id: "screen-admin-candidates", path: "pages/admin-candidates.html" },
       { id: "screen-admin-video-evaluation", path: "pages/admin-video-evaluation.html" },
       { id: "screen-admin-result-override", path: "pages/admin-result-override.html" },
       { id: "screen-admin-reports-analytics", path: "pages/admin-reports-analytics.html" },
-      { id: "screen-admin-audit-logs", path: "pages/admin-audit-logs.html" },
       { id: "screen-profile-settings", path: "pages/profile-settings.html" }
     ];
 
@@ -203,10 +214,9 @@ class SmartDriveApp {
   async fetchData() {
     if (useFirebase && db) {
       try {
-        // Fetch candidates, logs, and notifications in parallel
-        const [candSnap, logSnap, notifySnap] = await Promise.all([
+        // Fetch candidates and notifications in parallel
+        const [candSnap, notifySnap] = await Promise.all([
           fb.getDocs(fb.collection(db, "candidates")),
-          fb.getDocs(fb.collection(db, "audit_logs")),
           fb.getDocs(fb.collection(db, "notifications"))
         ]);
 
@@ -225,26 +235,6 @@ class SmartDriveApp {
           );
           await Promise.all(seedPromises);
           this.candidates = BACKUP_CANDIDATES;
-        }
-
-        this.auditLogs = [];
-        logSnap.forEach(d => {
-          this.auditLogs.push(d.data());
-        });
-        // Sort descending locally
-        this.auditLogs.sort((a,b) => new Date(b.time) - new Date(a.time));
-
-        // Seed default logs if empty
-        if (this.auditLogs.length === 0) {
-          const defaultLogs = [
-            { time: "2026-06-08 18:32:05", action: "Officer Authenticated", user: "rto.officer.01", ip: "192.168.1.45", detail: "Successful portal login session." },
-            { time: "2026-06-08 17:15:12", action: "Result Published", user: "rto.officer.01", ip: "192.168.1.45", detail: "Published Passed result for APP-2026-001." }
-          ];
-          const seedPromises = defaultLogs.map(l => 
-            fb.addDoc(fb.collection(db, "audit_logs"), l)
-          );
-          await Promise.all(seedPromises);
-          this.auditLogs = defaultLogs;
         }
 
         this.notifications = [];
@@ -348,9 +338,6 @@ class SmartDriveApp {
     } else if (screenId === "candidate-results") {
       document.getElementById("current-screen-title").innerText = this.currentLang === "en" ? "Driving Test Results" : "പരീക്ഷാ ഫലം";
       this.renderCandidateResults();
-    } else if (screenId === "candidate-feedback") {
-      document.getElementById("current-screen-title").innerText = this.currentLang === "en" ? "AI Driving Analysis" : "AI അഭിപ്രായം";
-      this.renderCandidateFeedback();
     } else if (screenId === "candidate-eligibility") {
       document.getElementById("current-screen-title").innerText = this.currentLang === "en" ? "License Eligibility" : "ലൈസൻസ് യോഗ്യത";
       this.renderCandidateEligibility();
@@ -366,9 +353,6 @@ class SmartDriveApp {
     } else if (screenId === "admin-reports-analytics") {
       document.getElementById("current-screen-title").innerText = "Reports & RTO Analytics Charts";
       this.renderAnalyticsCharts();
-    } else if (screenId === "admin-audit-logs") {
-      document.getElementById("current-screen-title").innerText = "System Cryptographic Logs";
-      this.renderAuditLogs();
     } else if (screenId === "profile-settings") {
       document.getElementById("current-screen-title").innerText = this.currentLang === "en" ? "Profile & App Settings" : "പ്രൊഫൈൽ ക്രമീകരണങ്ങൾ";
       this.renderProfileSettings();
@@ -458,12 +442,15 @@ class SmartDriveApp {
     if (user) {
       this.currentUser = user;
       this.currentRole = "candidate";
+      // Save session to localStorage
+      localStorage.setItem("sd_current_user", JSON.stringify(this.currentUser));
+      localStorage.setItem("sd_current_role", this.currentRole);
       this.setupDashboardView();
       this.showScreen("app-layout");
       this.route("candidate-dashboard");
       
       // Perform log write in background to avoid blocking user session
-      this.addAuditLog("Candidate Authenticated", user.name, "APP Login session.");
+
     } else {
       alert("Invalid Candidate Application Number or Date of Birth. Check App No (e.g. APP-2026-001) and Date.");
     }
@@ -477,12 +464,15 @@ class SmartDriveApp {
     if (user === "rto.officer.01" && pass === "rto123") {
       this.currentUser = { name: "Officer K. Raghavan", appNo: "RTO-1045", dob: "", email: "rtokasaragod@gov.in" };
       this.currentRole = "admin";
+      // Save session to localStorage
+      localStorage.setItem("sd_current_user", JSON.stringify(this.currentUser));
+      localStorage.setItem("sd_current_role", this.currentRole);
       this.setupDashboardView();
       this.showScreen("app-layout");
       this.route("admin-dashboard");
 
       // Perform log write in background to avoid blocking user session
-      this.addAuditLog("Officer Authenticated", "Officer K. Raghavan", "Secure admin session initialized.");
+
     } else {
       alert("Invalid credentials. Hint: use rto.officer.01 and rto123.");
     }
@@ -513,6 +503,9 @@ class SmartDriveApp {
   logout() {
     this.currentUser = null;
     this.currentRole = null;
+    // Clear session from localStorage
+    localStorage.removeItem("sd_current_user");
+    localStorage.removeItem("sd_current_role");
     this.showScreen("screen-landing");
   }
 
@@ -599,63 +592,7 @@ class SmartDriveApp {
     }
   }
 
-  // AUDIT LOG SYSTEM
-  renderAuditLogs() {
-    const tableBody = document.getElementById("admin-audit-logs-table");
-    if (!tableBody) return;
 
-    tableBody.innerHTML = "";
-    this.auditLogs.forEach(l => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td style="font-family:monospace; font-size:0.8rem;">${l.time}</td>
-        <td><strong style="color:var(--primary)">${l.action}</strong></td>
-        <td>${l.user}</td>
-        <td style="font-family:monospace;">${l.ip}</td>
-        <td style="color:var(--text-sub); font-size:0.85rem;">${l.detail}</td>
-      `;
-      tableBody.appendChild(row);
-    });
-  }
-
-  async addAuditLog(action, user, detail) {
-    const now = new Date();
-    const timestamp = now.toISOString().slice(0, 19).replace('T', ' ');
-    const ip = "192.168.1." + Math.floor(Math.random() * 254);
-    const logObj = { time: timestamp, action, user, ip, detail };
-
-    if (useFirebase && db) {
-      try {
-        await fb.addDoc(fb.collection(db, "audit_logs"), logObj);
-        await this.fetchData();
-        this.renderAuditLogs();
-      } catch (err) {
-        console.error(err);
-      }
-    } else {
-      this.auditLogs.unshift(logObj);
-      this.saveOfflineFallback();
-      this.renderAuditLogs();
-    }
-  }
-
-  async clearAuditLogs() {
-    if (useFirebase && db) {
-      try {
-        const snap = await fb.getDocs(fb.collection(db, "audit_logs"));
-        snap.forEach(async (d) => {
-          await fb.deleteDoc(fb.doc(db, "audit_logs", d.id));
-        });
-        this.auditLogs = [];
-        await this.addAuditLog("Audit Logs Cleared", "rto.officer.01", "Officer cleared database logs.");
-      } catch (err) {
-        console.error(err);
-      }
-    } else {
-      this.auditLogs = [];
-      await this.addAuditLog("Audit Logs Cleared (Offline)", "rto.officer.01", "Officer cleared simulation audit logs.");
-    }
-  }
 
   // USER DASHBOARD SCREEN
   renderCandidateDashboard() {
@@ -695,7 +632,8 @@ class SmartDriveApp {
     scoreCircleBar.style.stroke = user.status === "Passed" ? "var(--success)" : "var(--danger)";
 
     const assessment = document.getElementById("db-score-assessment");
-    if (user.score >= 80) assessment.innerText = "Safe Driving Performance";
+    if (user.score === 0) assessment.innerText = "Evaluation Pending";
+    else if (user.score >= 80) assessment.innerText = "Safe Driving Performance";
     else if (user.score >= 60) assessment.innerText = "Average Performance Profile";
     else assessment.innerText = "Risky Driving Profile Detected";
   }
@@ -755,31 +693,6 @@ class SmartDriveApp {
     });
   }
   // AI FEEDBACK AND RECOMMENDATIONS SCREEN
-  renderCandidateFeedback() {
-    const user = this.currentUser;
-    document.getElementById("feedback-driver-rating").innerText = user.driverRating;
-    document.getElementById("feedback-driver-rating-desc").innerText = user.driverRatingDesc;
-    
-    const strengthsList = document.getElementById("feedback-strengths");
-    strengthsList.innerHTML = "";
-    user.strengths.forEach(s => {
-      strengthsList.innerHTML += `<li>${s}</li>`;
-    });
-
-    const weaknessesList = document.getElementById("feedback-weaknesses");
-    weaknessesList.innerHTML = "";
-    user.weaknesses.forEach(w => {
-      weaknessesList.innerHTML += `<li>${w}</li>`;
-    });
-
-    document.getElementById("feedback-readiness-val").innerText = user.retestReadiness + "%";
-    document.getElementById("feedback-readiness-bar").style.width = user.retestReadiness + "%";
-
-    document.getElementById("feedback-personalized-text").innerText = 
-      user.status === "Passed" 
-        ? `"Your overall score is excellent. Ensure you use the side mirrors rather than relying exclusively on the back-facing camera to avoid manual remark overrides. Maintain indicator status for at least 3 seconds before executing maneuvers."`
-        : `"Retest readiness index requires target values above 80% to schedule slot booking. Focus on lateral path controls and parallel reverse docking maneuvers prior to reappearing."`;
-  }
 
   // LICENSE ELIGIBILITY SCREEN
   renderCandidateEligibility() {
@@ -790,18 +703,16 @@ class SmartDriveApp {
     document.getElementById("cert-score").innerText = `${user.score} / 100`;
     
     const statusText = document.getElementById("cert-status");
-    const retestText = document.getElementById("cert-retest-status");
 
     if (user.status === "Passed") {
       statusText.innerText = "APPROVED FOR LICENSE";
       statusText.style.color = "var(--success)";
-      retestText.innerText = "No Retest Required";
-      retestText.style.color = "var(--text-main)";
-    } else {
+    } else if (user.status === "Failed") {
       statusText.innerText = "NOT ELIGIBLE (FAILED)";
       statusText.style.color = "var(--danger)";
-      retestText.innerText = `Retest Scheduled: ${user.retestDate}`;
-      retestText.style.color = "var(--danger)";
+    } else {
+      statusText.innerText = "EVALUATION PENDING";
+      statusText.style.color = "var(--text-muted)";
     }
 
     document.getElementById("cert-eval-date").innerText = user.testDate;
@@ -847,10 +758,6 @@ class SmartDriveApp {
     document.getElementById("admin-stat-passed").innerText = passed;
     document.getElementById("admin-stat-failed").innerText = failed;
     document.getElementById("admin-stat-pending").innerText = pending;
-
-    const rate = ((passed / (passed + failed || 1)) * 100).toFixed(1) + "%";
-    document.getElementById("admin-metric-passrate").innerText = rate;
-    document.getElementById("admin-metric-passrate-bar").style.width = rate;
 
     const tbody = document.getElementById("admin-dashboard-recent-table");
     tbody.innerHTML = "";
@@ -1032,7 +939,7 @@ class SmartDriveApp {
             const candRef = fb.doc(db, "candidates", id);
             await fb.updateDoc(candRef, { name, appNo, dob, llNo, mobile, email, testDate });
           }
-          await this.addAuditLog("Candidate Edited", "rto.officer.01", `Modified registry details for candidate name: ${name}`);
+
         } else {
           const newId = String(Date.now());
           const newCandObj = {
@@ -1043,7 +950,7 @@ class SmartDriveApp {
             strengths: [], weaknesses: [], retestReadiness: 0, retestDate: "", violations: []
           };
           await fb.setDoc(fb.doc(db, "candidates", newId), newCandObj);
-          await this.addAuditLog("Candidate Registered", "rto.officer.01", `New registry record added: ${name}`);
+
         }
       } else {
         // Fallback
@@ -1053,7 +960,7 @@ class SmartDriveApp {
             this.candidates[index] = { ...this.candidates[index], name, appNo, dob, llNo, mobile, email, testDate };
             this.saveOfflineFallback();
           }
-          await this.addAuditLog("Candidate Edited (Offline)", "rto.officer.01", `Modified registry details for candidate name: ${name}`);
+
         } else {
           const newCand = {
             id: String(Date.now()), name, appNo, dob, llNo, mobile, email, testDate,
@@ -1064,7 +971,7 @@ class SmartDriveApp {
           };
           this.candidates.push(newCand);
           this.saveOfflineFallback();
-          await this.addAuditLog("Candidate Registered (Offline)", "rto.officer.01", `New registry record added: ${name}`);
+
         }
       }
       
@@ -1089,7 +996,7 @@ class SmartDriveApp {
             this.saveOfflineFallback();
           }
         }
-        await this.addAuditLog("Candidate Deleted", "rto.officer.01", `Deleted candidate registry record: ${c ? c.name : id}`);
+
         await this.fetchData();
         this.renderCandidatesCRUD();
       } catch (err) {
@@ -1348,7 +1255,7 @@ class SmartDriveApp {
         }
       }
 
-      await this.addAuditLog("Result Published", "rto.officer.01", `Published final ${this.overrideStatus} result for candidate: ${cand.name} (${cand.appNo})`);
+
       await this.addNotification("Result Published", `Evaluation scores published for candidate ${cand.name} (${cand.appNo}).`, "info");
 
       alert("Result override saved and published successfully.");
@@ -1361,8 +1268,6 @@ class SmartDriveApp {
   // ANALYTICS & HISTOGRAM CHARTS
   renderAnalyticsCharts() {
     if (this.charts.passrate) this.charts.passrate.destroy();
-    if (this.charts.violations) this.charts.violations.destroy();
-    if (this.charts.reasons) this.charts.reasons.destroy();
 
     const ctx1 = document.getElementById("chart-passrate-trend").getContext("2d");
     this.charts.passrate = new Chart(ctx1, {
@@ -1394,52 +1299,6 @@ class SmartDriveApp {
         }
       }
     });
-
-    const ctx2 = document.getElementById("chart-violations-freq").getContext("2d");
-    this.charts.violations = new Chart(ctx2, {
-      type: 'bar',
-      data: {
-        labels: ['Lane Boundary Touch', 'Vehicle Stall', 'Improper Reverse', 'Indicator Miss', 'Overspeeding', 'Unsafe Turn'],
-        datasets: [{
-          label: 'Instances Logged',
-          data: [42, 28, 12, 35, 14, 18],
-          backgroundColor: 'rgba(59, 130, 246, 0.85)',
-          borderColor: 'var(--primary)',
-          borderWidth: 1
-        }]
-      },
-      options: {
-        indexAxis: 'y',
-        responsive: true,
-        maintainAspectRatio: false
-      }
-    });
-
-    const ctx3 = document.getElementById("chart-failurereasons-pie").getContext("2d");
-    this.charts.reasons = new Chart(ctx3, {
-      type: 'doughnut',
-      data: {
-        labels: ['Boundary Line Touches', 'Parking Dock Stalls', 'Improper Reverses', 'Excessive Speed'],
-        datasets: [{
-          data: [45, 25, 20, 10],
-          backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#10b981'],
-          borderWidth: 1
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false
-      }
-    });
-  }
-
-  showHeatspotInfo(zone, detail, stats) {
-    const info = document.getElementById("heatmap-info-display");
-    info.innerHTML = `
-      <strong>Zone: ${zone}</strong><br>
-      <span style="color:var(--danger)">Failure Stats: ${stats}</span><br>
-      <span style="font-size:0.8rem; color:var(--text-sub);">${detail}</span>
-    `;
   }
 
   renderProfileSettings() {
