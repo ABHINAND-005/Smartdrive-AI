@@ -77,6 +77,17 @@ def json_response(payload, status: int = 200):
         mimetype="application/json",
     )
 
+def resize_with_aspect_ratio(frame, max_display_height=600):
+    """Resizes the frame to fit within the screen while maintaining aspect ratio."""
+    height, width = frame.shape[:2]
+    
+    # Calculate scale factor
+    scale = max_display_height / height
+    new_width = int(width * scale)
+    new_height = int(height * scale)
+    
+    return cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
+
 # ==========================================
 # UNIFIED AI EVALUATION ENGINE
 # ==========================================
@@ -274,6 +285,10 @@ def evaluate_rto_video(video_path, candidate_id):
                     if exit_counter >= EXIT_FRAME_BUFFER:
                         test_state = "FINISHED"
                         final_result = "PASSED" if total_score >= 80 else "FAILED"
+        
+
+
+        
 
         # UI Rendering
         score_color = (0, 255, 0) if total_score >= 80 else (0, 0, 255)
@@ -308,8 +323,12 @@ def evaluate_rto_video(video_path, candidate_id):
             elif test_state == "FINISHED":
                 result_color = (0, 255, 0) if final_result == "PASSED" else (0, 0, 255)
                 cv2.putText(frame, f"FINAL RESULT: {final_result}", (40, 130), cv2.FONT_HERSHEY_DUPLEX, 1.5, result_color, 4)
-
-        cv2.imshow(f"Evaluating: {candidate_id}", frame)
+        
+        display_frame = resize_with_aspect_ratio(frame, max_display_height=600)
+        
+        cv2.namedWindow(f"Evaluating: {candidate_id}", cv2.WINDOW_NORMAL)
+        
+        cv2.imshow(f"Evaluating: {candidate_id}", display_frame)
         if cv2.waitKey(1) & 0xFF == ord('q'): break
 
     cap.release()
