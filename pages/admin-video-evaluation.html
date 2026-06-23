@@ -1,52 +1,106 @@
 <style>
-/* Document verification dropzones */
-.upload-dropzone {
-  border: 2px dashed var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 30px;
-  text-align: center;
-  cursor: pointer;
-  background-color: var(--bg-main);
-  transition: all 0.2s ease;
-}
+    /* Document verification dropzones */
+    .upload-dropzone {
+      border: 2px dashed var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 30px;
+      text-align: center;
+      cursor: pointer;
+      background-color: var(--bg-main);
+      transition: all 0.2s ease;
+    }
 
-.upload-dropzone:hover {
-  border-color: var(--primary);
-  background-color: var(--primary-light);
-}
+    .upload-dropzone:hover {
+      border-color: var(--primary);
+      background-color: var(--primary-light);
+    }
 
-.upload-dropzone i {
-  font-size: 2.2rem;
-  color: var(--text-muted);
-  margin-bottom: 12px;
-}
+    .upload-dropzone i {
+      font-size: 2.2rem;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
 
-/* Console logs/Live terminal simulation */
-.log-terminal {
-  background-color: #020617;
-  color: #38bdf8;
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 0.8rem;
-  padding: 16px;
-  border-radius: var(--radius-md);
-  height: 160px;
-  overflow-y: auto;
-  margin-top: 15px;
-  border: 1px solid #1e293b;
-}
+    /* Console logs/Live terminal simulation */
+    .log-terminal {
+      background-color: #020617;
+      color: #38bdf8;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.8rem;
+      padding: 16px;
+      border-radius: var(--radius-md);
+      height: 160px;
+      overflow-y: auto;
+      margin-top: 15px;
+      border: 1px solid #1e293b;
+    }
 
-.log-line {
-  margin-bottom: 4px;
-}
+    .log-line { margin-bottom: 4px; }
+    .log-line.success { color: #4ade80; }
+    .log-line.error { color: #f87171; }
+    .log-line.warning { color: #fbbf24; }
 
-.log-line.success { color: #4ade80; }
-.log-line.error { color: #f87171; }
-.log-line.warning { color: #fbbf24; }
+    /* --- DASHBOARD STYLES --- */
+    .stats-row {
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 24px;
+        margin-bottom: 24px;
+    }
+
+    .stat-box {
+        flex: 1;
+        text-align: center;
+        border-right: 1px solid var(--border-color);
+    }
+    .stat-box:last-child { border-right: none; }
+
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-top: 10px;
+    }
+
+    .badge-decision {
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 1rem;
+        display: inline-block;
+        margin-top: 15px;
+        text-transform: uppercase;
+    }
+    .badge-decision.pass {
+        background-color: rgba(74, 222, 128, 0.15);
+        color: var(--success);
+        border: 1px solid var(--success);
+    }
+    .badge-decision.fail {
+        background-color: rgba(248, 113, 113, 0.15);
+        color: var(--danger);
+        border: 1px solid var(--danger);
+    }
+
+    .violation-item {
+        background-color: #0f172a;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 15px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .violation-meta {
+        font-size: 0.8rem;
+        color: var(--text-sub);
+        margin-top: 4px;
+    }
 </style>
 
-<div class="grid-cols-2-1">
+<div class="grid-cols-2-1" id="upload-section">
   
-  <!-- Video Uploader & Process Log -->
   <div class="card">
     <h3 style="margin-bottom:14px;"><i class="fa-solid fa-video"></i> Upload Driving Test Footage</h3>
     <p style="font-size:0.9rem; color:var(--text-sub); margin-bottom:20px;">
@@ -56,54 +110,47 @@
     <div style="display:flex; flex-direction:column; gap:20px;">
       <div class="form-group">
         <label>Assign to Candidate</label>
-        <select class="form-control" style="padding-left:14px;" id="upload-candidate-select">
-          <!-- Populated dynamically -->
-        </select>
+        <select class="form-control" id="upload-candidate-select">
+          </select>
       </div>
 
       <div class="upload-dropzone" onclick="document.getElementById('video-file-input').click()">
-        <input type="file" id="video-file-input" style="display:none;" onchange="app.handleVideoUpload(event)">
+        <input type="file" id="video-file-input" accept="video/mp4,video/avi" style="display:none;" onchange="app.handleVideoUpload(event)">
         <i class="fa-solid fa-cloud-arrow-up text-primary"></i>
-        <h4>Choose video file or Drag & Drop</h4>
+        <h4 id="upload-title">Choose video file or Drag & Drop</h4>
         <p style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;">MP4, AVI, MOV up to 120MB</p>
       </div>
 
       <div id="evaluation-progress-wrapper" style="display:none;">
         <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.85rem;">
           <span id="evaluation-status-label">Extracting vehicle coordinates...</span>
-          <strong id="evaluation-progress-val">40%</strong>
+          <strong id="evaluation-progress-val">Processing</strong>
         </div>
         <div style="height:10px; background-color:var(--bg-main); border-radius:5px; overflow:hidden;">
-          <div id="evaluation-progress-bar" style="height:100%; background:linear-gradient(90deg, var(--primary), var(--success)); width:40%"></div>
+          <div id="evaluation-progress-bar" style="height:100%; background:linear-gradient(90deg, var(--primary), var(--success)); width:100%"></div>
         </div>
       </div>
 
-      <!-- Log Console output -->
       <div class="log-terminal" id="evaluation-console-log">
         <div class="log-line">> RTO Artificial Intelligence System ready.</div>
         <div class="log-line">> Select candidate and upload footage to begin.</div>
       </div>
 
-      <button class="btn btn-success" style="width:100%;" id="start-evaluation-btn" disabled onclick="app.startAIEvaluation()">
+      <button type="button" class="btn btn-success" style="width:100%;" id="start-evaluation-btn" disabled onclick="app.startAIEvaluation()">
         <i class="fa-solid fa-microchip"></i> Start AI Evaluation Process
       </button>
     </div>
   </div>
 
-  <!-- Left instructions -->
   <div class="card" style="display:flex; flex-direction:column; justify-content:space-between;">
     <div>
       <h3 style="margin-bottom:12px;">Computer Vision Checkpoints</h3>
       <ul style="font-size:0.85rem; color:var(--text-sub); display:flex; flex-direction:column; gap:12px; padding-left:16px;">
-        <li><strong>Dynamic Track Calibration:</strong> Automatically maps the mathematical polygon of the H-track on the first frame and adapts to both horizontal and vertical camera orientations.</li>
-        <li><strong>Entry Gate Locking:</strong> Analyzes the vehicle's initial track overlap to permanently lock the specific entry prong as the sole legally permitted exit door.</li>
-        <li><strong>Sequential Path Verification:</strong> Enforces the official 5-step RTO corner sequence (e.g., TR -> TL -> BR -> BL -> TR), utilizing a 20% central deadzone to prevent false-positives while driving straight.</li>
-        <li><strong>Strict Boundary Checks:</strong> Requires the vehicle to maintain >95% track overlap; touching or crossing the outer limits outside the designated safe gate triggers an instant wall collision foul.</li>
-        <li><strong>Early Exit Detection:</strong> Triggers an automatic failure if the vehicle completely leaves the track geometry before successfully logging all required path checkpoints.</li>
-
+        <li><strong>Dynamic Track Calibration:</strong> Automatically maps the polygon of the H-track on the first frame.</li>
+        <li><strong>Sequential Path Verification:</strong> Enforces the official 5-step RTO corner sequence.</li>
+        <li><strong>Strict Boundary Checks:</strong> Touching outer limits outside the designated gate triggers foul.</li>
       </ul>
     </div>
-
     <div style="margin-top:20px; padding:16px; background-color:var(--warning-light); border-radius:var(--radius-md); border: 1px solid var(--warning-glow); display:flex; gap:10px;">
       <i class="fa-solid fa-triangle-exclamation text-warning" style="margin-top:2px;"></i>
       <span style="font-size:0.8rem; color:var(--warning-hover)">
@@ -112,4 +159,46 @@
     </div>
   </div>
 
+</div>
+
+<div id="result-dashboard" style="display:none; max-width: 1200px; margin: 40px auto 0;">
+    <h2 style="margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">
+        Generated AI Result Assessment 
+        <span id="dashboard-candidate-id" style="float:right; font-size:1rem; background:var(--warning-light); color:var(--warning-glow); padding:4px 10px; border-radius:4px; border:1px solid rgba(251,191,36,0.3);">---</span>
+    </h2>
+    
+    <div class="grid-cols-2-1">
+        <div class="card">
+            <div class="stats-row">
+                <div class="stat-box">
+                    <div style="font-size:0.8rem; color:var(--text-sub); font-weight:bold; letter-spacing:1px;">AI CALCULATED SCORE</div>
+                    <div class="stat-value" id="ai-score">--</div>
+                </div>
+                <div class="stat-box">
+                    <div style="font-size:0.8rem; color:var(--text-sub); font-weight:bold; letter-spacing:1px;">AI DECISION</div>
+                    <div id="ai-decision" class="badge-decision pass">--</div>
+                </div>
+                <div class="stat-box">
+                    <div style="font-size:0.8rem; color:var(--text-sub); font-weight:bold; letter-spacing:1px;">CONFIDENCE LEVEL</div>
+                    <div class="stat-value" id="ai-confidence">--%</div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 25px;">
+                <label style="font-size:0.85rem; color:var(--text-sub); display:block; margin-bottom:8px;">Manual Officer Remarks (Optional override explanation)</label>
+                <textarea class="form-control" id="override-remarks" rows="3" placeholder="AI calculation shows correct path tracking. Recommended approval..."></textarea>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:15px; margin-top:30px; border-top: 1px solid var(--border-color); padding-top:20px;">
+                <button class="btn" style="background:#334155; color:white;" onclick="app.resetEvaluationUI()">Evaluate New Driver</button>
+                <button class="btn btn-success" onclick="app.overrideAIResult(app.evaluatingCandidateId)"><i class="fa-solid fa-sliders"></i> Override Result</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-bottom: 20px; font-size:1.1rem;">Decisive Violations Logs</h3>
+            <div id="violations-log">
+                </div>
+        </div>
+    </div>
 </div>

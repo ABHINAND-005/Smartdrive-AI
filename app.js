@@ -85,20 +85,9 @@ class SmartDriveApp {
     this.candidates = [];
     this.notifications = [];
     
-    // Video Simulation States
-    this.videoDuration = 30;
-    this.videoTime = 0;
-    this.isPlaying = false;
-    this.playInterval = null;
-    this.activeViolationIndex = -1;
-    this.simulatedPath = [];
-    
     // Video upload state
     this.uploadedVideoFile = null;
     this.evaluatingCandidateId = null;
-    this.evaluatingProgress = 0;
-    this.evaluationLogs = [];
-    this.evaluationTimer = null;
     
     // Override Screen state
     this.overrideCandidateId = null;
@@ -112,7 +101,6 @@ class SmartDriveApp {
     this.currentLang = localStorage.getItem("sd_lang") || "en";
     this.applyTheme();
 
-    // Restore user session from localStorage immediately if it exists
     const savedUser = localStorage.getItem("sd_current_user");
     const savedRole = localStorage.getItem("sd_current_role");
     if (savedUser && savedRole) {
@@ -120,13 +108,9 @@ class SmartDriveApp {
       this.currentRole = savedRole;
     }
 
-    // Dynamically load page template fragments
     await this.loadTemplates();
-
-    // Initialize Firebase
     await this.initFirebase();
 
-    // Fetch initial database records with connection timeout fallback
     if (useFirebase) {
       try {
         await Promise.race([
@@ -142,7 +126,6 @@ class SmartDriveApp {
       this.loadOfflineFallback();
     }
 
-    // Setup dashboard if session was restored
     if (this.currentUser && this.currentRole) {
       this.setupDashboardView();
       this.showScreen("app-layout");
@@ -151,8 +134,10 @@ class SmartDriveApp {
 
     this.renderNotifications();
     
-    document.getElementById("landing-stat-total").innerText = "14,250+";
-    document.getElementById("landing-stat-rate").innerText = "72.4%";
+    const statTotal = document.getElementById("landing-stat-total");
+    const statRate = document.getElementById("landing-stat-rate");
+    if(statTotal) statTotal.innerText = "14,250+";
+    if(statRate) statRate.innerText = "72.4%";
   }
 
   async loadTemplates() {
@@ -187,7 +172,6 @@ class SmartDriveApp {
     }));
   }
 
-  // DYNAMIC FIREBASE INTEGRATION WITH CDN WRAPPERS
   async initFirebase() {
     if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY") {
       try {
@@ -215,7 +199,6 @@ class SmartDriveApp {
   async fetchData() {
     if (useFirebase && db) {
       try {
-        // Fetch candidates and notifications in parallel
         const [candSnap, notifySnap] = await Promise.all([
           fb.getDocs(fb.collection(db, "candidates")),
           fb.getDocs(fb.collection(db, "notifications"))
@@ -225,12 +208,9 @@ class SmartDriveApp {
         candSnap.forEach(d => {
           this.candidates.push({ id: d.id, ...d.data() });
         });
-        // Sort newest registered first
         this.candidates.sort((a, b) => Number(b.id) - Number(a.id));
 
-        // Seed Firestore if it is completely empty
         if (this.candidates.length === 0) {
-          console.log("Cloud database empty. Seeding initial candidate data...");
           const seedPromises = BACKUP_CANDIDATES.map(c => 
             fb.setDoc(fb.doc(db, "candidates", c.id), c)
           );
@@ -244,18 +224,6 @@ class SmartDriveApp {
         });
         this.notifications.sort((a,b) => b.id - a.id);
 
-        if (this.notifications.length === 0) {
-          const defaultNotify = [
-            { title: "Result Published", desc: "Your driving evaluation result is now available.", time: "2 hours ago", unread: true, type: "success" },
-            { title: "License Approved", desc: "Digital verification badge generated.", time: "1 day ago", unread: false, type: "primary" }
-          ];
-          const seedPromises = defaultNotify.map((n, i) => {
-            const temp = { ...n, id: Date.now() + i };
-            return fb.setDoc(fb.doc(db, "notifications", String(temp.id)), temp);
-          });
-          await Promise.all(seedPromises);
-          this.notifications = defaultNotify;
-        }
       } catch (err) {
         console.error("Firestore transaction error:", err.message);
         this.loadOfflineFallback();
@@ -264,7 +232,6 @@ class SmartDriveApp {
       this.loadOfflineFallback();
     }
 
-    // Refresh active session variables
     if (this.currentUser && this.currentRole === "candidate") {
       const fresh = this.candidates.find(c => c.id === this.currentUser.id);
       if (fresh) this.currentUser = fresh;
@@ -279,35 +246,19 @@ class SmartDriveApp {
       this.candidates = BACKUP_CANDIDATES;
       localStorage.setItem("sd_firebase_fallback_candidates", JSON.stringify(this.candidates));
     }
-    // Sort newest registered first
     this.candidates.sort((a, b) => Number(b.id) - Number(a.id));
-
-    const cachedLogs = localStorage.getItem("sd_firebase_fallback_logs");
-    if (cachedLogs) {
-      this.auditLogs = JSON.parse(cachedLogs);
-    } else {
-      this.auditLogs = [
-        { time: "2026-06-08 18:32:05", action: "Officer Authenticated", user: "rto.officer.01", ip: "192.168.1.45", detail: "Successful portal login session." },
-        { time: "2026-06-08 17:15:12", action: "Result Published", user: "rto.officer.01", ip: "192.168.1.45", detail: "Published Passed result for APP-2026-001." }
-      ];
-      localStorage.setItem("sd_firebase_fallback_logs", JSON.stringify(this.auditLogs));
-    }
 
     const cachedNotify = localStorage.getItem("sd_firebase_fallback_notify");
     if (cachedNotify) {
       this.notifications = JSON.parse(cachedNotify);
     } else {
-      this.notifications = [
-        { id: 1, title: "Result Published (Simulated)", desc: "Your driving evaluation result is cached locally.", time: "2 hours ago", unread: true, type: "success" },
-        { id: 2, title: "Identity Verified (Simulated)", desc: "Aadhaar verified locally.", time: "2 days ago", unread: false, type: "info" }
-      ];
+      this.notifications = [];
       localStorage.setItem("sd_firebase_fallback_notify", JSON.stringify(this.notifications));
     }
   }
 
   saveOfflineFallback() {
     localStorage.setItem("sd_firebase_fallback_candidates", JSON.stringify(this.candidates));
-    localStorage.setItem("sd_firebase_fallback_logs", JSON.stringify(this.auditLogs));
     localStorage.setItem("sd_firebase_fallback_notify", JSON.stringify(this.notifications));
   }
 
@@ -328,10 +279,6 @@ class SmartDriveApp {
     if (activeMenu) activeMenu.classList.add("active");
 
     document.getElementById("app-notification-panel").classList.remove("active");
-
-    if (this.isPlaying) {
-      this.togglePlay();
-    }
 
     if (screenId === "candidate-dashboard") {
       document.getElementById("current-screen-title").innerText = this.currentLang === "en" ? "User Dashboard" : "ഉപയോക്തൃ ഡാഷ്‌ബോർഡ്";
@@ -437,26 +384,20 @@ class SmartDriveApp {
           this.fetchData(),
           new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 2000))
         ]);
-      } catch (err) {
-        console.warn("Fetch timed out. Using local cache.");
-      }
+      } catch (err) {}
     }
 
     const user = this.candidates.find(c => c.appNo === appNo && c.dob === dob);
     if (user) {
       this.currentUser = user;
       this.currentRole = "candidate";
-      // Save session to localStorage
       localStorage.setItem("sd_current_user", JSON.stringify(this.currentUser));
       localStorage.setItem("sd_current_role", this.currentRole);
       this.setupDashboardView();
       this.showScreen("app-layout");
       this.route("candidate-dashboard");
-      
-      // Perform log write in background to avoid blocking user session
-
     } else {
-      alert("Invalid Candidate Application Number or Date of Birth. Check App No (e.g. APP-2026-001) and Date.");
+      alert("Invalid Candidate Application Number or Date of Birth.");
     }
   }
 
@@ -468,15 +409,11 @@ class SmartDriveApp {
     if (user === "rto.officer.01" && pass === "rto123") {
       this.currentUser = { name: "Officer K. Raghavan", appNo: "RTO-1045", dob: "", email: "rtokasaragod@gov.in" };
       this.currentRole = "admin";
-      // Save session to localStorage
       localStorage.setItem("sd_current_user", JSON.stringify(this.currentUser));
       localStorage.setItem("sd_current_role", this.currentRole);
       this.setupDashboardView();
       this.showScreen("app-layout");
       this.route("admin-dashboard");
-
-      // Perform log write in background to avoid blocking user session
-
     } else {
       alert("Invalid credentials. Hint: use rto.officer.01 and rto123.");
     }
@@ -507,7 +444,6 @@ class SmartDriveApp {
   logout() {
     this.currentUser = null;
     this.currentRole = null;
-    // Clear session from localStorage
     localStorage.removeItem("sd_current_user");
     localStorage.removeItem("sd_current_role");
     this.showScreen("screen-landing");
@@ -521,19 +457,17 @@ class SmartDriveApp {
     if (panel.classList.contains("active")) {
       if (useFirebase && db) {
         try {
-          // Batch update notifications unread to false
           const snap = await fb.getDocs(fb.collection(db, "notifications"));
           snap.forEach(async (d) => {
             if (d.data().unread) {
               await fb.updateDoc(fb.doc(db, "notifications", d.id), { unread: false });
             }
           });
-          document.getElementById("notify-badge-dot").style.display = "none";
+          const dot = document.getElementById("notify-badge-dot");
+          if(dot) dot.style.display = "none";
           await this.fetchData();
           this.renderNotifications();
-        } catch (err) {
-          console.error(err);
-        }
+        } catch (err) {}
       } else {
         this.notifications.forEach(n => n.unread = false);
         this.saveOfflineFallback();
@@ -544,6 +478,7 @@ class SmartDriveApp {
 
   renderNotifications() {
     const list = document.getElementById("app-notifications-list");
+    if(!list) return;
     list.innerHTML = "";
     
     const unreadCount = this.notifications.filter(n => n.unread).length;
@@ -586,17 +521,13 @@ class SmartDriveApp {
         await fb.setDoc(fb.doc(db, "notifications", String(id)), { id, ...n });
         await this.fetchData();
         this.renderNotifications();
-      } catch (err) {
-        console.error(err);
-      }
+      } catch (err) {}
     } else {
       this.notifications.unshift({ id: Date.now(), ...n });
       this.saveOfflineFallback();
       this.renderNotifications();
     }
   }
-
-
 
   // USER DASHBOARD SCREEN
   renderCandidateDashboard() {
@@ -606,7 +537,7 @@ class SmartDriveApp {
     document.getElementById("db-license-eligibility").innerText = user.eligibility;
     document.getElementById("db-eval-date").innerText = user.testDate;
     document.getElementById("db-score-val").innerText = user.score;
-    document.getElementById("db-ai-confidence").innerText = user.aiConfidence + "%";
+    document.getElementById("db-ai-confidence").innerText = (user.aiConfidence || 0) + "%";
     document.getElementById("db-officer-approval").innerText = user.officerApproved ? "Approved" : "Pending";
 
     const statusBg = document.getElementById("db-status-bg");
@@ -630,16 +561,10 @@ class SmartDriveApp {
     }
 
     const circumference = 2 * Math.PI * 70;
-    const offset = circumference - (user.score / 100) * circumference;
+    const offset = circumference - ((user.score || 0) / 100) * circumference;
     const scoreCircleBar = document.getElementById("score-circle-bar");
     scoreCircleBar.style.strokeDashoffset = offset;
     scoreCircleBar.style.stroke = user.status === "Passed" ? "var(--success)" : "var(--danger)";
-
-    const assessment = document.getElementById("db-score-assessment");
-    if (user.score === 0) assessment.innerText = "Evaluation Pending";
-    else if (user.score >= 80) assessment.innerText = "Safe Driving Performance";
-    else if (user.score >= 60) assessment.innerText = "Average Performance Profile";
-    else assessment.innerText = "Risky Driving Profile Detected";
   }
 
   // CANDIDATE RESULTS SCREEN
@@ -651,7 +576,7 @@ class SmartDriveApp {
     statusStamp.className = `badge ${user.status === 'Passed' ? 'badge-success' : 'badge-danger'}`;
 
     document.getElementById("res-score-val").innerText = user.score;
-    document.getElementById("res-confidence-val").innerText = user.aiConfidence + "%";
+    document.getElementById("res-confidence-val").innerText = (user.aiConfidence || 0) + "%";
     document.getElementById("res-evaluation-date").innerText = user.testDate;
     document.getElementById("res-officer-remarks").innerText = user.officerRemarks;
     document.getElementById("res-officer-name").innerText = user.officerName || "Inspector K. Raghavan";
@@ -659,12 +584,13 @@ class SmartDriveApp {
     document.getElementById("res-approval-badge").innerText = user.officerApproved ? "Approved" : "Pending Approval";
 
     const vListCount = document.getElementById("res-violation-count");
-    vListCount.innerText = user.violations.length === 1 ? "1 Violation" : `${user.violations.length} Violations`;
-    vListCount.className = `badge ${user.violations.length > 0 ? 'badge-danger' : 'badge-success'}`;
+    const vLength = user.violations ? user.violations.length : 0;
+    vListCount.innerText = vLength === 1 ? "1 Violation" : `${vLength} Violations`;
+    vListCount.className = `badge ${vLength > 0 ? 'badge-danger' : 'badge-success'}`;
 
     const list = document.getElementById("results-violations-list");
     list.innerHTML = "";
-    if (user.violations.length === 0) {
+    if (vLength === 0) {
       list.innerHTML = `
         <div style="text-align:center; padding:40px; color:var(--text-muted); background:var(--bg-main); border-radius:var(--radius-md);">
           <i class="fa-solid fa-circle-check text-success" style="font-size:3rem; margin-bottom:12px;"></i>
@@ -677,7 +603,7 @@ class SmartDriveApp {
 
     user.violations.forEach(v => {
       const card = document.createElement("div");
-      card.className = `violation-card-item severity-${v.severity.toLowerCase()}`;
+      card.className = `violation-card-item severity-${(v.severity||'').toLowerCase()}`;
       card.innerHTML = `
         <div class="violation-card-icon">
           <i class="fa-solid fa-triangle-exclamation"></i>
@@ -685,7 +611,7 @@ class SmartDriveApp {
         <div class="violation-card-info">
           <div class="violation-card-title">
             ${v.name}
-            <span>Time: 00:${v.time.toString().padStart(2, '0')}</span>
+            <span>Time: ${v.time}</span>
           </div>
           <div style="font-size:0.75rem; font-weight:700; margin-bottom:4px;" class="${v.severity === 'Critical' ? 'text-danger' : 'text-warning'}">
             Severity: ${v.severity}
@@ -696,7 +622,6 @@ class SmartDriveApp {
       list.appendChild(card);
     });
   }
-  // AI FEEDBACK AND RECOMMENDATIONS SCREEN
 
   // LICENSE ELIGIBILITY SCREEN
   renderCandidateEligibility() {
@@ -720,13 +645,6 @@ class SmartDriveApp {
     }
 
     document.getElementById("cert-eval-date").innerText = user.testDate;
-
-    const qrCanvas = document.getElementById("eligibility-qr-canvas");
-    new QRious({
-      element: qrCanvas,
-      value: `https://sarathi.parivahan.gov.in/verify/rto-kzd/app=${user.appNo}`,
-      size: 160
-    });
   }
 
   downloadReport(reportType) {
@@ -738,10 +656,9 @@ class SmartDriveApp {
     );
   }
 
-
-
   showGeneralNoticeModal(iconHtml, title, desc) {
-    document.getElementById("general-notice-icon").outerHTML = `<div id="general-notice-icon" style="font-size:3rem; margin-bottom:20px;">${iconHtml}</div>`;
+    const iconWrapper = document.getElementById("general-notice-icon");
+    if(iconWrapper) iconWrapper.outerHTML = `<div id="general-notice-icon" style="font-size:3rem; margin-bottom:20px;">${iconHtml}</div>`;
     document.getElementById("general-notice-title").innerText = title;
     document.getElementById("general-notice-desc").innerText = desc;
     document.getElementById("modal-general-notice").classList.add("active");
@@ -764,6 +681,7 @@ class SmartDriveApp {
     document.getElementById("admin-stat-pending").innerText = pending;
 
     const tbody = document.getElementById("admin-dashboard-recent-table");
+    if(!tbody) return;
     tbody.innerHTML = "";
     
     const sorted = [...this.candidates].reverse().slice(0, 5);
@@ -776,8 +694,8 @@ class SmartDriveApp {
       row.innerHTML = `
         <td><strong>${c.name}</strong></td>
         <td style="font-family:monospace;">${c.appNo}</td>
-        <td>${c.testDate}</td>
-        <td><strong>${c.score}</strong></td>
+        <td>${c.testDate || '-'}</td>
+        <td><strong>${c.score || 0}</strong></td>
         <td><span class="badge ${badgeClass}">${c.status}</span></td>
         <td class="table-action-row">
           <button class="table-action-btn" onclick="app.viewCandidateProfile('${c.id}')" title="View details"><i class="fa-solid fa-eye"></i></button>
@@ -791,6 +709,7 @@ class SmartDriveApp {
   // CANDIDATES REGISTRY CRUD
   renderCandidatesCRUD() {
     const table = document.getElementById("admin-candidates-crud-table");
+    if(!table) return;
     table.innerHTML = "";
     
     this.candidates.forEach(c => {
@@ -805,7 +724,7 @@ class SmartDriveApp {
         <td>${c.dob}</td>
         <td style="font-family:monospace;">${c.llNo}</td>
         <td>${c.mobile}</td>
-        <td>${c.testDate}</td>
+        <td>${c.testDate || '-'}</td>
         <td><span class="badge ${badgeClass}">${c.status}</span></td>
         <td class="table-action-row">
           <button class="table-action-btn" onclick="app.viewCandidateProfile('${c.id}')" title="View Detail"><i class="fa-solid fa-eye"></i></button>
@@ -839,7 +758,7 @@ class SmartDriveApp {
         <td>${c.dob}</td>
         <td style="font-family:monospace;">${c.llNo}</td>
         <td>${c.mobile}</td>
-        <td>${c.testDate}</td>
+        <td>${c.testDate || '-'}</td>
         <td><span class="badge ${badgeClass}">${c.status}</span></td>
         <td class="table-action-row">
           <button class="table-action-btn" onclick="app.viewCandidateProfile('${c.id}')" title="View detail"><i class="fa-solid fa-eye"></i></button>
@@ -898,7 +817,6 @@ class SmartDriveApp {
     const email = document.getElementById("cand-email").value.trim();
     const testDate = document.getElementById("cand-test-date").value;
 
-    // Age validation (must be 18+)
     const birthDate = new Date(dob);
     const today = new Date();
     let age = today.getFullYear() - birthDate.getFullYear();
@@ -911,29 +829,25 @@ class SmartDriveApp {
       return;
     }
 
-    // Driving test date validation (cannot be in the past)
     const selectedDate = new Date(testDate);
     const todayDateOnly = new Date();
     todayDateOnly.setHours(0, 0, 0, 0);
     selectedDate.setHours(0, 0, 0, 0);
     
-    // Only enforce test date checks for new candidate registrations
     if (!id && selectedDate < todayDateOnly) {
       alert("Validation Failed: Driving test date cannot be in the past.");
       return;
     }
 
-    // Duplicate Application Number check
     const duplicateApp = this.candidates.find(c => c.appNo === appNo && c.id !== id);
     if (duplicateApp) {
-      alert(`Validation Failed: The Application Number "${appNo}" is already registered to candidate "${duplicateApp.name}".`);
+      alert(`Validation Failed: The Application Number "${appNo}" is already registered.`);
       return;
     }
 
-    // Duplicate License Number check
     const duplicateLL = this.candidates.find(c => c.llNo === llNo && c.id !== id);
     if (duplicateLL) {
-      alert(`Validation Failed: The Learner's License Number "${llNo}" is already registered to candidate "${duplicateLL.name}".`);
+      alert(`Validation Failed: The Learner's License Number "${llNo}" is already registered.`);
       return;
     }
 
@@ -945,7 +859,6 @@ class SmartDriveApp {
             const candRef = fb.doc(db, "candidates", id);
             await fb.updateDoc(candRef, { name, appNo, dob, llNo, mobile, email, testDate });
           }
-
         } else {
           const newId = String(Date.now());
           const newCandObj = {
@@ -956,17 +869,14 @@ class SmartDriveApp {
             strengths: [], weaknesses: [], retestReadiness: 0, retestDate: "", violations: []
           };
           await fb.setDoc(fb.doc(db, "candidates", newId), newCandObj);
-
         }
       } else {
-        // Fallback
         if (id) {
           const index = this.candidates.findIndex(c => c.id === id);
           if (index >= 0) {
             this.candidates[index] = { ...this.candidates[index], name, appNo, dob, llNo, mobile, email, testDate };
             this.saveOfflineFallback();
           }
-
         } else {
           const newCand = {
             id: String(Date.now()), name, appNo, dob, llNo, mobile, email, testDate,
@@ -977,7 +887,6 @@ class SmartDriveApp {
           };
           this.candidates.push(newCand);
           this.saveOfflineFallback();
-
         }
       }
       
@@ -992,7 +901,6 @@ class SmartDriveApp {
   async deleteCandidate(id) {
     if (confirm("Are you sure you want to delete this candidate record?")) {
       try {
-        const c = this.candidates.find(item => item.id === id);
         if (useFirebase && db) {
           await fb.deleteDoc(fb.doc(db, "candidates", id));
         } else {
@@ -1059,14 +967,14 @@ class SmartDriveApp {
 
     const strengths = document.getElementById("admin-candidate-strengths");
     if (strengths) {
-      strengths.innerHTML = cand.strengths.length
+      strengths.innerHTML = (cand.strengths && cand.strengths.length)
         ? cand.strengths.map(item => `<li>${item}</li>`).join("")
         : `<li>No strengths recorded.</li>`;
     }
 
     const weaknesses = document.getElementById("admin-candidate-weaknesses");
     if (weaknesses) {
-      weaknesses.innerHTML = cand.weaknesses.length
+      weaknesses.innerHTML = (cand.weaknesses && cand.weaknesses.length)
         ? cand.weaknesses.map(item => `<li>${item}</li>`).join("")
         : `<li>No weaknesses recorded.</li>`;
     }
@@ -1074,7 +982,7 @@ class SmartDriveApp {
     const violations = document.getElementById("admin-candidate-violations");
     if (violations) {
       violations.innerHTML = "";
-      if (cand.violations.length === 0) {
+      if (!cand.violations || cand.violations.length === 0) {
         violations.innerHTML = `<div style="padding:16px; border:1px solid var(--border-color); border-radius:var(--radius-md); color:var(--text-sub);">No violations recorded for this candidate.</div>`;
       } else {
         cand.violations.forEach(v => {
@@ -1087,7 +995,7 @@ class SmartDriveApp {
             <div class="violation-card-info">
               <div class="violation-card-title">
                 ${v.name}
-                <span>Time: 00:${String(v.time).padStart(2, "0")}</span>
+                <span>Time: ${v.time}</span>
               </div>
               <div style="font-size:0.75rem; font-weight:700; margin-bottom:4px;" class="${v.severity === 'Critical' ? 'text-danger' : 'text-warning'}">
                 Severity: ${v.severity}
@@ -1100,7 +1008,6 @@ class SmartDriveApp {
       }
     }
 
-    // Populate AI assessment panel fields on profile (if present)
     const aScore = document.getElementById("admin-candidate-assessment-score");
     if (aScore) aScore.innerText = cand.score !== undefined ? cand.score : "-";
 
@@ -1129,7 +1036,7 @@ class SmartDriveApp {
         cand.violations.forEach(v => {
           aViolations.innerHTML += `
             <div style="padding:8px; border-bottom:1px dashed var(--border-color); display:flex; justify-content:space-between; align-items:center; gap:8px;">
-              <div style="font-size:0.9rem;"><strong>${v.name}</strong><div style="font-size:0.8rem; color:var(--text-muted)">Time: s${v.time} • ${v.description}</div></div>
+              <div style="font-size:0.9rem;"><strong>${v.name}</strong><div style="font-size:0.8rem; color:var(--text-muted)">Time: ${v.time} • ${v.description}</div></div>
               <span class="badge ${v.severity === 'Critical' ? 'badge-danger' : 'badge-warning'}">${v.severity}</span>
             </div>
           `;
@@ -1138,12 +1045,15 @@ class SmartDriveApp {
     }
   }
 
-  // VIDEO UPLOAD & AI SIMULATOR
+  // ==========================================
+  // REAL PYTHON VIDEO UPLOAD & AI ENGINE
+  // ==========================================
   renderVideoEvaluation() {
     const select = document.getElementById("upload-candidate-select");
+    if(!select) return;
     select.innerHTML = "";
     
-    const pending = this.candidates.filter(c => c.status === "Pending");
+    const pending = this.candidates.filter(c => c.status === "Pending" || c.status === "Processing");
     if (pending.length === 0) {
       this.candidates.forEach(c => {
         select.innerHTML += `<option value="${c.id}">${c.name} (${c.appNo})</option>`;
@@ -1154,14 +1064,7 @@ class SmartDriveApp {
       });
     }
 
-    document.getElementById("start-evaluation-btn").disabled = true;
-    document.getElementById("evaluation-progress-wrapper").style.display = "none";
-    
-    const log = document.getElementById("evaluation-console-log");
-    log.innerHTML = `
-      <div class="log-line">> RTO Artificial Intelligence System ready.</div>
-      <div class="log-line">> Select candidate and upload footage to begin.</div>
-    `;
+    this.resetEvaluationUI();
   }
 
   handleVideoUpload(e) {
@@ -1170,110 +1073,191 @@ class SmartDriveApp {
 
     this.uploadedVideoFile = file;
     document.getElementById("start-evaluation-btn").disabled = false;
+    document.getElementById("upload-title").innerText = file.name;
     
     const log = document.getElementById("evaluation-console-log");
     log.innerHTML += `
-      <div class="log-line success">> Video telemetry package ingested: ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)</div>
-      <div class="log-line">> System coordinates mappings loaded. Click Start AI Evaluation.</div>
+      <div class="log-line success">> Video telemetry package loaded: ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)</div>
+      <div class="log-line">> Ready to stream to YOLO backend. Click Start AI Evaluation.</div>
     `;
     log.scrollTop = log.scrollHeight;
   }
 
-  startAIEvaluation() {
+  async startAIEvaluation() {
+    if (!this.uploadedVideoFile) return;
+
     const candSelect = document.getElementById("upload-candidate-select");
     this.evaluatingCandidateId = candSelect.value;
+    const candidateId = this.evaluatingCandidateId;
     
-    document.getElementById("start-evaluation-btn").disabled = true;
-    document.getElementById("evaluation-progress-wrapper").style.display = "block";
-    this.evaluatingProgress = 0;
-    
-    const logs = [
-      "Initializing computer vision tensor networks...",
-      "Mapping RTO SmartTrack boundary vectors...",
-      "Tracking vehicle path coordinates (10 fps logging)...",
-      "Analyzing boundary intersections...",
-      "Checking parking docking alignment parameters...",
-      "Evaluating turn indicator delays...",
-      "Generating final safe driver assessment score..."
-    ];
-
+    const btn = document.getElementById('start-evaluation-btn');
+    const progressWrapper = document.getElementById('evaluation-progress-wrapper');
     const logBox = document.getElementById("evaluation-console-log");
 
-    this.evaluationTimer = setInterval(() => {
-      this.evaluatingProgress += 10;
-      if (this.evaluatingProgress > 100) this.evaluatingProgress = 100;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing Video on Local GPU...';
+    progressWrapper.style.display = 'block';
 
-      document.getElementById("evaluation-progress-bar").style.width = this.evaluatingProgress + "%";
-      document.getElementById("evaluation-progress-val").innerText = this.evaluatingProgress + "%";
+    logBox.innerHTML += `<div class="log-line warning">> Transmitting video to Local PyTorch Engine for ${candidateId}...</div>`;
+    logBox.innerHTML += `<div class="log-line">> A local OpenCV window will open to display the real-time AI tracking. Please wait...</div>`;
+    logBox.scrollTop = logBox.scrollHeight;
 
-      const logIdx = Math.floor((this.evaluatingProgress / 100) * (logs.length - 1));
-      logBox.innerHTML += `<div class="log-line">> ${logs[logIdx]}</div>`;
-      logBox.scrollTop = logBox.scrollHeight;
-
-      if (this.evaluatingProgress >= 100) {
-        clearInterval(this.evaluationTimer);
-        this.finishAIEvaluation();
-      }
-    }, 400);
-  }
-
-  async finishAIEvaluation() {
-    const id = this.evaluatingCandidateId;
-    const cand = this.candidates.find(c => c.id === id);
-    if (!cand) return;
-
-    const aiResult = {
-      score: 82,
-      aiConfidence: 95.4,
-      status: "Passed",
-      eligibility: "Eligible",
-      driverRating: "Safe Driver",
-      driverRatingDesc: "Vehicle maintains good speed profiles and centers turn lanes properly.",
-      strengths: ["Defensive spacing parameters normal", "Safe reverse alignment inside dock grid"],
-      weaknesses: ["Indicator signal delayed at exit curve"],
-      officerRemarks: "AI calculation shows correct path tracking. Recommended approval.",
-      officerName: "Inspector K. Raghavan",
-      officerApproved: true,
-      testDate: new Date().toISOString().split('T')[0],
-      violations: [
-        {
-          name: "Wrong Indicator Usage",
-          severity: "Warning",
-          time: 25,
-          description: "Turned exits without satisfying 3 seconds pre-signal alerts.",
-          x: 280, y: 140
-        }
-      ]
-    };
+    const formData = new FormData();
+    formData.append('video', this.uploadedVideoFile);
+    formData.append('candidate_id', candidateId);
 
     try {
-      if (useFirebase && db) {
-        await fb.updateDoc(fb.doc(db, "candidates", id), aiResult);
-      } else {
-        const index = this.candidates.findIndex(item => item.id === id);
-        if (index >= 0) {
-          this.candidates[index] = { ...this.candidates[index], ...aiResult };
-          this.saveOfflineFallback();
+            // FIX 3: Point the fetch to Python on Port 5000!
+            const response = await fetch('http://127.0.0.1:5000/api/evaluate', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+            console.log("Backend PyTorch Response:", data);
+
+        if (data.success) {
+            const results = data.results;
+            logBox.innerHTML += `<div class="log-line success">> Evaluation Complete! Processing AI results vector.</div>`;
+            logBox.scrollTop = logBox.scrollHeight;
+            
+            // Extract the true score and format violations
+            const finalScore = Number(results.total_score) || 0;
+            let violationEntries = [];
+            
+            if (results.violations) {
+                if (Array.isArray(results.violations)) {
+                    violationEntries = results.violations.map(v => [v, 1]);
+                } else if (typeof results.violations === 'object') {
+                    violationEntries = Object.entries(results.violations);
+                }
+            }
+            
+            const hasViolations = violationEntries.length > 0;
+
+            // STRICT RTO LOGIC: Any violation instantly forces a FAILED result
+            let strictDecision = 'FAILED';
+            if (finalScore === 100 && !hasViolations) {
+                strictDecision = 'PASSED';
+            }
+
+            // Map violations to fit the App DB schema
+            const formattedViolations = violationEntries.map(([v_name, v_count]) => ({
+                name: v_name,
+                severity: "Warning",
+                time: "N/A",
+                description: `Occurrence Count: ${v_count}`
+            }));
+
+            const modifiedResult = {
+                score: finalScore,
+                aiConfidence: results.ai_confidence || 0,
+                status: strictDecision,
+                eligibility: strictDecision === "PASSED" ? "Eligible" : "Not Eligible",
+                officerRemarks: strictDecision === "PASSED" ? "AI verified path. Recommended pass." : "AI detected boundary or sequence violations.",
+                officerName: "System AI Engine",
+                officerApproved: false, 
+                testDate: new Date().toISOString().split('T')[0],
+                violations: formattedViolations
+            };
+
+            // 1. UPDATE LOCAL & FIREBASE DB
+            if (useFirebase && db) {
+                await fb.updateDoc(fb.doc(db, "candidates", candidateId), modifiedResult);
+            } else {
+                const index = this.candidates.findIndex(item => item.id === candidateId);
+                if (index >= 0) {
+                    this.candidates[index] = { ...this.candidates[index], ...modifiedResult };
+                    this.saveOfflineFallback();
+                }
+            }
+            await this.fetchData();
+
+            // 2. UPDATE THE INLINE DASHBOARD (If viewing admin-video-evaluation.html)
+            const dashboard = document.getElementById('result-dashboard');
+            if (dashboard) {
+                document.getElementById('dashboard-candidate-id').innerText = candidateId;
+                document.getElementById('ai-score').innerText = finalScore;
+                document.getElementById('ai-confidence').innerText = (results.ai_confidence || 0) + '%';
+                
+                const decisionBadge = document.getElementById('ai-decision');
+                decisionBadge.innerText = strictDecision;
+                decisionBadge.className = strictDecision === 'PASSED' ? 'badge-decision pass' : 'badge-decision fail';
+
+                const vContainer = document.getElementById('violations-log');
+                vContainer.innerHTML = '';
+                
+                if (hasViolations) {
+                    violationEntries.forEach(([v_name, v_count]) => {
+                        vContainer.innerHTML += `
+                            <div class="violation-item">
+                                <div>
+                                    <strong style="color:white;">${v_name}</strong>
+                                    <div class="violation-meta">Occurrence Count: ${v_count}</div>
+                                </div>
+                                <span class="badge-warning">WARNING</span>
+                            </div>
+                        `;
+                        logBox.innerHTML += `<div class="log-line error">> Foul Logged: ${v_name} x${v_count}</div>`;
+                    });
+                } else {
+                    vContainer.innerHTML = `
+                        <div style="padding: 20px; text-align: center; color: var(--success); background: rgba(74, 222, 128, 0.1); border-radius: 8px; border: 1px dashed var(--success);">
+                            <i class="fa-solid fa-check-circle" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                            <div>No violations detected. Perfect run!</div>
+                        </div>
+                    `;
+                    logBox.innerHTML += `<div class="log-line success">> Violations: None. Clean run!</div>`;
+                }
+                logBox.scrollTop = logBox.scrollHeight;
+
+                document.getElementById('upload-section').style.display = 'none';
+                dashboard.style.display = 'block';
+            } else {
+                // Fallback to routing to the standard override screen if inline dashboard is missing
+                this.overrideAIResult(candidateId);
+            }
+
+        } else {
+            logBox.innerHTML += `<div class="log-line error">> Error: ${data.error}</div>`;
+            logBox.scrollTop = logBox.scrollHeight;
         }
-      }
 
-      await this.fetchData();
-      
-      const logBox = document.getElementById("evaluation-console-log");
-      logBox.innerHTML += `
-        <div class="log-line success">> AI Evaluation complete. Score: 82. Result: Passed.</div>
-        <div class="log-line success">> Ingesting reports to RTO gateway DB...</div>
-      `;
-      logBox.scrollTop = logBox.scrollHeight;
-
-      setTimeout(() => {
-        this.overrideAIResult(id);
-      }, 1200);
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+        logBox.innerHTML += `<div class="log-line error">> Connection Error: Ensure app.py is running on port 3000 in your terminal!</div>`;
+        logBox.scrollTop = logBox.scrollHeight;
+        console.error("Local PyTorch Fetch Error:", error);
+    } finally {
+        btn.innerHTML = '<i class="fa-solid fa-microchip"></i> Start AI Evaluation Process';
+        btn.disabled = false;
+        progressWrapper.style.display = 'none';
     }
   }
 
+  resetEvaluationUI() {
+    const dashboard = document.getElementById('result-dashboard');
+    const uploadSec = document.getElementById('upload-section');
+    if (dashboard) dashboard.style.display = 'none';
+    if (uploadSec) uploadSec.style.display = 'grid';
+    
+    this.uploadedVideoFile = null;
+    
+    const btn = document.getElementById('start-evaluation-btn');
+    if (btn) btn.disabled = true;
+    
+    const title = document.getElementById('upload-title');
+    if (title) title.innerText = "Choose video file or Drag & Drop";
+    
+    const log = document.getElementById("evaluation-console-log");
+    if (log) {
+        log.innerHTML = `
+          <div class="log-line">> RTO Artificial Intelligence System ready.</div>
+          <div class="log-line">> Select candidate and upload footage to begin.</div>
+        `;
+    }
+  }
+
+  // OVERRIDE RESULT UI
   overrideAIResult(candidateId) {
     this.overrideCandidateId = candidateId;
     const cand = this.candidates.find(c => c.id === candidateId);
@@ -1283,7 +1267,7 @@ class SmartDriveApp {
     document.getElementById("override-ai-score").innerText = cand.score;
     document.getElementById("override-ai-decision").innerText = cand.status;
     document.getElementById("override-ai-decision").className = `badge ${cand.status === 'Passed' ? 'badge-success' : 'badge-danger'}`;
-    document.getElementById("override-ai-confidence").innerText = cand.aiConfidence + "%";
+    document.getElementById("override-ai-confidence").innerText = (cand.aiConfidence || 0) + "%";
     document.getElementById("override-remarks").value = cand.officerRemarks;
     
     this.overrideStatus = cand.status;
@@ -1291,7 +1275,7 @@ class SmartDriveApp {
 
     const vList = document.getElementById("override-violations-summary-list");
     vList.innerHTML = "";
-    if (cand.violations.length === 0) {
+    if (!cand.violations || cand.violations.length === 0) {
       vList.innerHTML = `<div style="font-size:0.85rem; color:var(--text-muted);">No violations detected.</div>`;
     } else {
       cand.violations.forEach(v => {
@@ -1299,7 +1283,7 @@ class SmartDriveApp {
           <div style="padding:10px; border:1px solid var(--border-color); border-radius:var(--radius-sm); font-size:0.8rem; display:flex; justify-content:space-between; align-items:center;">
             <div>
               <strong>${v.name}</strong><br>
-              <span style="color:var(--text-muted)">Time: s${v.time} • Severity: ${v.severity}</span>
+              <span style="color:var(--text-muted)">Time: ${v.time} • Severity: ${v.severity}</span>
             </div>
             <span class="badge ${v.severity === 'Critical' ? 'badge-danger' : 'badge-warning'}">${v.severity}</span>
           </div>
@@ -1343,24 +1327,15 @@ class SmartDriveApp {
     if (!cand) return;
 
     const modifiedResult = {
-      score: cand.score,
-      aiConfidence: cand.aiConfidence,
       status: this.overrideStatus,
       eligibility: this.overrideStatus === "Passed" ? "Eligible" : "Retest Required",
       officerRemarks: document.getElementById("override-remarks").value,
       officerApproved: true,
       officerName: "Inspector K. Raghavan",
-      testDate: new Date().toISOString().split('T')[0],
-      driverRating: cand.driverRating,
-      driverRatingDesc: cand.driverRatingDesc,
-      retestReadiness: cand.retestReadiness,
-      retestDate: cand.retestDate,
-      strengths: cand.strengths,
-      weaknesses: cand.weaknesses,
-      violations: cand.violations
+      testDate: new Date().toISOString().split('T')[0]
     };
 
-    if (this.overrideStatus === "Failed" && !modifiedResult.retestDate) {
+    if (this.overrideStatus === "Failed" && !cand.retestDate) {
       const rtDate = new Date();
       rtDate.setDate(rtDate.getDate() + 7);
       modifiedResult.retestDate = rtDate.toISOString().split('T')[0];
@@ -1377,9 +1352,7 @@ class SmartDriveApp {
         }
       }
 
-
       await this.addNotification("Result Published", `Evaluation scores published for candidate ${cand.name} (${cand.appNo}).`, "info");
-
       alert("Result override saved and published successfully.");
       this.route("admin-dashboard");
     } catch (err) {
@@ -1387,7 +1360,6 @@ class SmartDriveApp {
     }
   }
 
-  // Publish current candidate result from profile (mark officerApproved and persist remarks)
   async publishCandidateResult(candidateId) {
     const cand = this.candidates.find(c => c.id === candidateId);
     if (!cand) return;
@@ -1477,14 +1449,12 @@ class SmartDriveApp {
     document.getElementById("profile-edit-email").value = user.email || "";
   }
 
-  // SIDEBAR TOGGLE
-
   toggleSidebar() {
     const sidebar = document.getElementById("app-sidebar");
     sidebar.classList.toggle("mobile-open");
   }
 }
 
-const app = new SmartDriveApp();
-window.onload = () => app.init();
-window.app = app; // Bind globally for HTML event handlers
+const appInstance = new SmartDriveApp();
+window.onload = () => appInstance.init();
+window.app = appInstance; // Bind globally for HTML event handlers
