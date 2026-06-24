@@ -17,7 +17,7 @@ from shapely.geometry import Polygon
 # --- Firebase & Flask Imports ---
 import firebase_admin
 from firebase_admin import credentials, firestore
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request, send_from_directory, Response
 from flask_cors import CORS
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -32,6 +32,9 @@ DEFAULT_NOTIFICATIONS = []
 
 app = Flask(__name__, static_folder=str(BASE_DIR), static_url_path="")
 CORS(app)
+
+# GLOBAL VARIABLE FOR WEB STREAMING
+CURRENT_EVAL_FRAME = None
 
 # ==========================================
 # FIREBASE UTILS
@@ -92,6 +95,8 @@ def resize_with_aspect_ratio(frame, max_display_height=600):
 # UNIFIED AI EVALUATION ENGINE
 # ==========================================
 def evaluate_rto_video(video_path, candidate_id):
+    global CURRENT_EVAL_FRAME
+    
     print(f"[INFO] Loading optimized PyTorch model...")
     # Make sure best.pt is in the same folder as app.py
     model = YOLO("best.pt", task="segment") 
@@ -130,10 +135,20 @@ def evaluate_rto_video(video_path, candidate_id):
     COOLDOWN_FRAMES = 45 
     early_exit_foul_active = False
 
+    # ANTI-LAG: Frame Skipping Setup
+    frame_count = 0
+    frame_skip = 1 # Processes every 2nd frame (doubles stream speed)
+
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret: 
             break
+            
+        frame_count += 1
+        
+        # ANTI-LAG: Skip frames to keep real-time stream fast
+        if frame_count % frame_skip != 0:
+            continue
             
         frame_h, frame_w = frame.shape[:2]
         inside_percentage = 100.0 
@@ -142,7 +157,8 @@ def evaluate_rto_video(video_path, candidate_id):
         if boundary_foul_cooldown > 0:
             boundary_foul_cooldown -= 1
 
-        results = model(frame, verbose=False, device=0) # Uses GPU if available
+        # ANTI-LAG: Lower imgsz to 480 to speed up GPU/CPU evaluation
+        results = model(frame, verbose=False, device=0, imgsz=480) 
         detected_cars = []
 
         for result in results:
@@ -286,10 +302,6 @@ def evaluate_rto_video(video_path, candidate_id):
                         test_state = "FINISHED"
                         final_result = "PASSED" if total_score >= 80 else "FAILED"
         
-
-
-        
-
         # UI Rendering
         score_color = (0, 255, 0) if total_score >= 80 else (0, 0, 255)
         cv2.putText(frame, f"SCORE: {total_score}/100", (40, 50), cv2.FONT_HERSHEY_DUPLEX, 1.2, score_color, 3)
@@ -326,16 +338,19 @@ def evaluate_rto_video(video_path, candidate_id):
         
         display_frame = resize_with_aspect_ratio(frame, max_display_height=600)
         
-        cv2.namedWindow(f"Evaluating: {candidate_id}", cv2.WINDOW_NORMAL)
+        # Save the frame to the global variable for the web stream
+        CURRENT_EVAL_FRAME = display_frame.copy()
         
-        cv2.imshow(f"Evaluating: {candidate_id}", display_frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'): break
+        # ANTI-LAG: Tiny sleep to allow Flask streaming thread to grab the image
+        time.sleep(0.005) 
 
     cap.release()
-    cv2.destroyAllWindows()
 
     if not final_result:
         final_result = "INCOMPLETE (Aborted)"
+
+    # Clear the stream when done
+    CURRENT_EVAL_FRAME = None
 
     return {
         "candidate_id": candidate_id,
@@ -344,6 +359,30 @@ def evaluate_rto_video(video_path, candidate_id):
         "ai_confidence": round(avg_confidence, 1) if confidence_count > 0 else 0.0,
         "violations": violation_counts
     }
+
+# ==========================================
+# WEB STREAMING ENDPOINTS
+# ==========================================
+def generate_live_frames():
+    """Generator function that yields frames to the web browser."""
+    global CURRENT_EVAL_FRAME
+    while True:
+        if CURRENT_EVAL_FRAME is not None:
+            # Encode the frame in JPEG format
+            ret, buffer = cv2.imencode('.jpg', CURRENT_EVAL_FRAME)
+            if ret:
+                frame_bytes = buffer.tobytes()
+                # Yield the multipart response frame
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+        else:
+            # If no frame is currently being processed, yield a blank frame or wait
+            time.sleep(0.1)
+
+@app.route("/api/video_stream")
+def video_stream():
+    """Route to stream the live evaluation to the frontend."""
+    return Response(generate_live_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 # ==========================================
 # FLASK WEB ENDPOINTS
@@ -366,7 +405,8 @@ def run_evaluation():
     try:
         print(f"[BACKEND] Starting AI evaluation for {candidate_id}...")
         
-        # Call the unified engine directly!
+        # This will block and run the evaluation. 
+        # While it runs, the frames are sent to CURRENT_EVAL_FRAME for the stream.
         results = evaluate_rto_video(str(video_path), candidate_id)
         
         if video_path.exists():
@@ -526,5 +566,5 @@ if __name__ == "__main__":
     print("🚀 SMART RTO UNIFIED ENGINE STARTING ON PORT 5000...")
     print("Ensure best.pt is placed in the same folder as app.py")
     print("="*50)
-    # ADD use_reloader=False HERE!
-    app.run(host="127.0.0.1", port=5000, debug=True, threaded=False, use_reloader=False)
+    # THREADED MUST BE TRUE FOR THE VIDEO STREAM TO WORK SIMULTANEOUSLY!
+    app.run(host="127.0.0.1", port=5000, debug=True, threaded=True, use_reloader=False)

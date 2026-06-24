@@ -111,7 +111,8 @@
       <div class="form-group">
         <label>Assign to Candidate</label>
         <select class="form-control" id="upload-candidate-select">
-          </select>
+          <!-- Populated Dynamically -->
+        </select>
       </div>
 
       <div class="upload-dropzone" onclick="document.getElementById('video-file-input').click()">
@@ -142,25 +143,37 @@
     </div>
   </div>
 
-  <div class="card" style="display:flex; flex-direction:column; justify-content:space-between;">
-    <div>
-      <h3 style="margin-bottom:12px;">Computer Vision Checkpoints</h3>
-      <ul style="font-size:0.85rem; color:var(--text-sub); display:flex; flex-direction:column; gap:12px; padding-left:16px;">
-        <li><strong>Dynamic Track Calibration:</strong> Automatically maps the polygon of the H-track on the first frame.</li>
-        <li><strong>Sequential Path Verification:</strong> Enforces the official 5-step RTO corner sequence.</li>
-        <li><strong>Strict Boundary Checks:</strong> Touching outer limits outside the designated gate triggers foul.</li>
-      </ul>
-    </div>
-    <div style="margin-top:20px; padding:16px; background-color:var(--warning-light); border-radius:var(--radius-md); border: 1px solid var(--warning-glow); display:flex; gap:10px;">
-      <i class="fa-solid fa-triangle-exclamation text-warning" style="margin-top:2px;"></i>
-      <span style="font-size:0.8rem; color:var(--warning-hover)">
-        <strong>System Note:</strong> Result can be overridden by a senior officer after completion in case of telemetry error.
+  <!-- LIVE VIDEO STREAM CARD -->
+  <div class="card" style="display:flex; flex-direction:column; padding:0; overflow:hidden; border: 1px solid var(--border-color);">
+    <div style="padding: 15px 20px; background: var(--bg-main); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+      <h3 style="margin: 0; font-size: 1.1rem;"><i class="fa-solid fa-satellite-dish" style="color: var(--primary);"></i> Live AI Evaluation Feed</h3>
+      <span class="badge" style="background: rgba(255,255,255,0.1); color: #94a3b8; font-weight: 600; padding: 5px 12px; border-radius: 15px;" id="stream-status">
+        <i class="fa-solid fa-circle-notch fa-spin"></i> Standby
       </span>
+    </div>
+    
+    <div style="background-color: #020617; flex: 1; display: flex; align-items: center; justify-content: center; min-height: 400px; position: relative;">
+      <!-- Offline Placeholder -->
+      <div id="video-placeholder" style="text-align: center; color: #334155; position: absolute; z-index: 1;">
+        <i class="fa-solid fa-video-slash" style="font-size: 3rem; margin-bottom: 15px;"></i>
+        <p style="font-size: 0.9rem; margin: 0; font-weight: bold; letter-spacing: 1px;">AWAITING TELEMETRY</p>
+      </div>
+      
+      <!-- Live Web Stream MJPEG Feed -->
+      <img id="live-video-feed" src="http://127.0.0.1:5000/api/video_stream" alt="Live AI Stream" 
+           style="width: 100%; height: 100%; object-fit: contain; position: relative; z-index: 2; opacity: 0; transition: opacity 0.3s ease;"
+           onload="this.style.opacity='1'; document.getElementById('stream-status').innerHTML='<i class=\'fa-solid fa-circle text-success\'></i> LIVE'; document.getElementById('stream-status').style.color='var(--success)';"
+           onerror="this.style.opacity='0'; document.getElementById('stream-status').innerHTML='<i class=\'fa-solid fa-circle-notch fa-spin\'></i> Standby'; document.getElementById('stream-status').style.color='#94a3b8';">
+    </div>
+    
+    <div style="padding: 15px; background: var(--warning-light); border-top: 1px solid var(--warning-glow); font-size: 0.8rem; color: var(--warning-hover);">
+      <i class="fa-solid fa-triangle-exclamation text-warning"></i> <strong>System Note:</strong> The video feed will automatically activate and stream the computer-vision tracking overlays once the evaluation process is started.
     </div>
   </div>
 
 </div>
 
+<!-- RESULT DASHBOARD -->
 <div id="result-dashboard" style="display:none; max-width: 1200px; margin: 40px auto 0;">
     <h2 style="margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">
         Generated AI Result Assessment 
@@ -198,7 +211,8 @@
         <div class="card">
             <h3 style="margin-bottom: 20px; font-size:1.1rem;">Decisive Violations Logs</h3>
             <div id="violations-log">
-                </div>
+                <!-- Dynamically populated by Javascript -->
+            </div>
         </div>
     </div>
 </div>
