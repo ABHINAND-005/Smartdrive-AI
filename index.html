@@ -201,7 +201,7 @@
         <h3 id="modal-candidate-title">Register New Candidate</h3>
         <button class="close-modal-btn" onclick="app.closeCandidateModal()"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <form onsubmit="app.handleSaveCandidate(event)">
+      <form id="modal-candidate-form" onsubmit="app.handleSaveCandidate(event)">
         <input type="hidden" id="modal-candidate-id">
         <div class="modal-body">
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
@@ -227,7 +227,7 @@
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
             <div class="form-group">
               <label>Mobile Number</label>
-              <input type="tel" id="cand-mobile" class="form-control" required>
+              <input type="tel" id="cand-mobile" class="form-control" pattern="^[0-9]{10}$" placeholder="e.g. 9876543210" required oninvalid="this.setCustomValidity('Enter a valid 10-digit mobile number.')" oninput="this.setCustomValidity('')">
             </div>
             <div class="form-group">
               <label>Email Address</label>

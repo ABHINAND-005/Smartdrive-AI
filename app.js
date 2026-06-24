@@ -111,6 +111,11 @@ class SmartDriveApp {
     await this.loadTemplates();
     await this.initFirebase();
 
+    const candidateForm = document.getElementById("modal-candidate-form");
+    if (candidateForm) {
+      candidateForm.addEventListener("submit", e => this.handleSaveCandidate(e));
+    }
+
     if (useFirebase) {
       try {
         await Promise.race([
@@ -714,9 +719,7 @@ class SmartDriveApp {
     
     this.candidates.forEach(c => {
       const row = document.createElement("tr");
-      let badgeClass = "badge-success";
-      if (c.status === "Failed") badgeClass = "badge-danger";
-      else if (c.status === "Pending" || c.status === "Processing") badgeClass = "badge-warning";
+      const badgeClass = this.getStatusBadgeClass(c.status);
 
       row.innerHTML = `
         <td><strong>${c.name}</strong></td>
@@ -748,9 +751,7 @@ class SmartDriveApp {
 
     filtered.forEach(c => {
       const row = document.createElement("tr");
-      let badgeClass = "badge-success";
-      if (c.status === "Failed") badgeClass = "badge-danger";
-      else if (c.status === "Pending" || c.status === "Processing") badgeClass = "badge-warning";
+      const badgeClass = this.getStatusBadgeClass(c.status);
 
       row.innerHTML = `
         <td><strong>${c.name}</strong></td>
@@ -802,6 +803,35 @@ class SmartDriveApp {
     document.getElementById("modal-add-candidate").classList.add("active");
   }
 
+  getStatusBadgeClass(status) {
+    const normalized = String(status || "").trim().toLowerCase();
+    if (normalized === "failed") return "badge-danger";
+    if (normalized === "passed") return "badge-success";
+    if (normalized === "pending" || normalized === "processing") return "badge-warning";
+    return "badge-secondary";
+  }
+
+  normalizeValue(value) {
+    return String(value || "").trim().toLowerCase().replace(/\s+/g, " ");
+  }
+
+  isValidAppNo(appNo) {
+    return /^[A-Za-z0-9][A-Za-z0-9\-\/ ]{2,}$/.test(String(appNo || "").trim());
+  }
+
+  isValidLicenseNo(llNo) {
+    return /^[A-Za-z0-9][A-Za-z0-9\-\/ ]{2,}$/.test(String(llNo || "").trim());
+  }
+
+  isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || "").trim());
+  }
+
+  isValidPhoneNumber(phone) {
+    const normalized = phone.replace(/\D/g, "");
+    return /^\d{10}$/.test(normalized);
+  }
+
   closeCandidateModal() {
     document.getElementById("modal-add-candidate").classList.remove("active");
   }
@@ -817,7 +847,31 @@ class SmartDriveApp {
     const email = document.getElementById("cand-email").value.trim();
     const testDate = document.getElementById("cand-test-date").value;
 
+    if (!name) {
+      alert("Validation Failed: Candidate name is required.");
+      document.getElementById("cand-name").focus();
+      return;
+    }
+
+    if (!appNo || !this.isValidAppNo(appNo)) {
+      alert("Validation Failed: Enter a valid application number.");
+      document.getElementById("cand-app-no").focus();
+      return;
+    }
+
+    if (!dob) {
+      alert("Validation Failed: Date of birth is required.");
+      document.getElementById("cand-dob").focus();
+      return;
+    }
+
     const birthDate = new Date(dob);
+    if (!Number.isFinite(birthDate.getTime())) {
+      alert("Validation Failed: Enter a valid date of birth.");
+      document.getElementById("cand-dob").focus();
+      return;
+    }
+
     const today = new Date();
     let age = today.getFullYear() - birthDate.getFullYear();
     const m = today.getMonth() - birthDate.getMonth();
@@ -826,6 +880,37 @@ class SmartDriveApp {
     }
     if (age < 18) {
       alert("Validation Failed: Candidate must be at least 18 years old.");
+      document.getElementById("cand-dob").focus();
+      return;
+    }
+
+    if (!llNo || !this.isValidLicenseNo(llNo)) {
+      alert("Validation Failed: Enter a valid learner's license number.");
+      document.getElementById("cand-ll-no").focus();
+      return;
+    }
+
+    if (!mobile) {
+      alert("Validation Failed: Mobile number is required.");
+      document.getElementById("cand-mobile").focus();
+      return;
+    }
+
+    if (!this.isValidPhoneNumber(mobile)) {
+      alert("Validation Failed: Please enter a valid 10-digit mobile number.");
+      document.getElementById("cand-mobile").focus();
+      return;
+    }
+
+    if (email && !this.isValidEmail(email)) {
+      alert("Validation Failed: Enter a valid email address.");
+      document.getElementById("cand-email").focus();
+      return;
+    }
+
+    if (!testDate) {
+      alert("Validation Failed: Driving test date is required.");
+      document.getElementById("cand-test-date").focus();
       return;
     }
 
@@ -836,18 +921,32 @@ class SmartDriveApp {
     
     if (!id && selectedDate < todayDateOnly) {
       alert("Validation Failed: Driving test date cannot be in the past.");
+      document.getElementById("cand-test-date").focus();
       return;
     }
 
-    const duplicateApp = this.candidates.find(c => c.appNo === appNo && c.id !== id);
+    const normalizedAppNo = this.normalizeValue(appNo);
+    const normalizedLLNo = this.normalizeValue(llNo);
+    const normalizedMobile = mobile.replace(/\D/g, "");
+
+    const duplicateApp = this.candidates.find(c => this.normalizeValue(c.appNo) === normalizedAppNo && c.id !== id);
     if (duplicateApp) {
       alert(`Validation Failed: The Application Number "${appNo}" is already registered.`);
+      document.getElementById("cand-app-no").focus();
       return;
     }
 
-    const duplicateLL = this.candidates.find(c => c.llNo === llNo && c.id !== id);
+    const duplicateLL = this.candidates.find(c => this.normalizeValue(c.llNo) === normalizedLLNo && c.id !== id);
     if (duplicateLL) {
       alert(`Validation Failed: The Learner's License Number "${llNo}" is already registered.`);
+      document.getElementById("cand-ll-no").focus();
+      return;
+    }
+
+    const duplicateMobile = this.candidates.find(c => c.mobile.replace(/\D/g, "") === normalizedMobile && c.id !== id);
+    if (duplicateMobile) {
+      alert(`Validation Failed: The mobile number "${mobile}" is already registered.`);
+      document.getElementById("cand-mobile").focus();
       return;
     }
 

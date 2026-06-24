@@ -287,13 +287,11 @@
 <div class="auth-page">
   <div class="auth-card animate-fade">
     <div class="auth-header">
-      <div class="auth-badge"><span class="dot"></span> Live AI Officer Access</div>
+      <div class="auth-badge"><span class="dot"></span> Officer Portal</div>
       <div class="logo" style="color: var(--success)">
-        <i class="fa-solid fa-user-shield"></i> SmartDrive <span>Officer</span>
+        <i class="fa-solid fa-user-shield"></i>
       </div>
-      <h2>Step into the future of intelligent driving evaluation</h2>
-      <div class="hero-tag"># Automated AI driving test evaluation</div>
-      <p>Welcome to the SmartDrive AI system, powered by the State Transport Department. High-precision cameras, computer vision, and deep learning models track vehicle trajectory, detect violations, and deliver transparent license eligibility decisions in real time.</p>
+      <h2>Officer Login</h2>
     </div>
     <form onsubmit="app.handleAdminLogin(event)">
       <div class="form-group">
@@ -310,13 +308,13 @@
           <input type="password" id="admin-pass" class="form-control" required>
         </div>
       </div>
-      <button type="submit" class="btn btn-success" style="width: 100%; margin-top: 10px; animation: pulseGlow 1.8s ease-in-out infinite;">
-        <i class="fa-solid fa-shield-halved"></i> Enter Smart Command Center
+      <button type="submit" class="btn btn-success" style="width: 100%; margin-top: 10px;">
+        Login
       </button>
     </form>
     <div class="auth-footer">
-      <p>Are you a candidate? <a href="#" onclick="app.showScreen('screen-user-login')">Verify Result</a></p>
-      <p style="margin-top: 15px;"><a href="#" onclick="app.showScreen('screen-landing')"><i class="fa-solid fa-arrow-left"></i> Back to Home</a></p>
+      <p><a href="#" onclick="app.showScreen('screen-user-login')">Candidate Result</a></p>
+      <p style="margin-top: 15px;"><a href="#" onclick="app.showScreen('screen-landing')">Back</a></p>
     </div>
   </div>
 </div>
