@@ -132,7 +132,7 @@ def evaluate_rto_video(video_path, candidate_id):
     avg_confidence = 0.0
     
     boundary_foul_cooldown = 0
-    COOLDOWN_FRAMES = 45 
+    COOLDOWN_FRAMES = 90 
     early_exit_foul_active = False
 
     # ANTI-LAG: Frame Skipping Setup
