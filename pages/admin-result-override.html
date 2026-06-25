@@ -13,7 +13,7 @@
   <div class="card">
     <div class="card-title-bar">
       <h3>Generated AI Result Assessment</h3>
-      <span class="badge badge-warning" id="override-candidate-badge">APP-2026-003</span>
+      <span class="badge badge-warning" id="override-candidate-badge">-</span>
     </div>
 
     <div style="display:flex; flex-direction:column; gap:20px;">
@@ -69,3 +69,126 @@
   </div>
 
 </div>
+
+<script>
+app.overrideAIResult = function(candidateId) {
+  this.overrideCandidateId = candidateId;
+  const cand = this.candidates.find(c => c.id === candidateId);
+  if (!cand) return;
+
+  document.getElementById("override-candidate-badge").innerText = cand.appNo;
+  document.getElementById("override-ai-score").innerText = cand.score;
+  document.getElementById("override-ai-decision").innerText = cand.status;
+  
+  const statusLower = (cand.status || "").trim().toLowerCase();
+  let badgeClass = "badge-success";
+  if (statusLower === "failed") badgeClass = "badge-danger";
+  else if (statusLower === "pending" || statusLower === "processing") badgeClass = "badge-warning";
+  document.getElementById("override-ai-decision").className = `badge ${badgeClass}`;
+  
+  document.getElementById("override-ai-confidence").innerText = cand.aiConfidence + "%";
+  document.getElementById("override-remarks").value = cand.officerRemarks;
+  
+  this.overrideStatus = cand.status;
+  this.updateOverrideButtons();
+
+  const vList = document.getElementById("override-violations-summary-list");
+  vList.innerHTML = "";
+  if (cand.violations.length === 0) {
+    vList.innerHTML = `<div style="font-size:0.85rem; color:var(--text-muted);">No violations detected.</div>`;
+  } else {
+    cand.violations.forEach(v => {
+      vList.innerHTML += `
+        <div style="padding:10px; border:1px solid var(--border-color); border-radius:var(--radius-sm); font-size:0.8rem; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <strong>${v.name}</strong><br>
+            <span style="color:var(--text-muted)">Time: s${v.time} • Severity: ${v.severity}</span>
+          </div>
+          <span class="badge ${v.severity === 'Critical' ? 'badge-danger' : 'badge-warning'}">${v.severity}</span>
+        </div>
+      `;
+    });
+  }
+
+  this.route("admin-result-override");
+};
+
+app.setOverrideStatus = function(status) {
+  this.overrideStatus = status;
+  this.updateOverrideButtons();
+};
+
+app.updateOverrideButtons = function() {
+  const btnPass = document.getElementById("override-btn-pass");
+  const btnFail = document.getElementById("override-btn-fail");
+
+  const statusLower = (this.overrideStatus || "").trim().toLowerCase();
+
+  if (statusLower === "passed") {
+    btnPass.className = "btn btn-secondary active";
+    btnPass.style.borderColor = "var(--success)";
+    btnPass.style.color = "var(--success)";
+    
+    btnFail.className = "btn btn-secondary";
+    btnFail.style.borderColor = "";
+    btnFail.style.color = "";
+  } else {
+    btnFail.className = "btn btn-secondary active";
+    btnFail.style.borderColor = "var(--danger)";
+    btnFail.style.color = "var(--danger)";
+    
+    btnPass.className = "btn btn-secondary";
+    btnPass.style.borderColor = "";
+    btnPass.style.color = "";
+  }
+};
+
+app.saveOverrideResult = async function() {
+  const cand = this.candidates.find(c => c.id === this.overrideCandidateId);
+  if (!cand) return;
+
+  const modifiedResult = {
+    score: cand.score,
+    aiConfidence: cand.aiConfidence,
+    status: this.overrideStatus,
+    eligibility: (this.overrideStatus || "").trim().toLowerCase() === "passed" ? "Eligible" : "Retest Required",
+    officerRemarks: document.getElementById("override-remarks").value,
+    officerApproved: true,
+    officerName: "Inspector K. Raghavan",
+    testDate: new Date().toISOString().split('T')[0],
+    driverRating: cand.driverRating,
+    driverRatingDesc: cand.driverRatingDesc,
+    retestReadiness: cand.retestReadiness,
+    retestDate: cand.retestDate,
+    strengths: cand.strengths,
+    weaknesses: cand.weaknesses,
+    violations: cand.violations
+  };
+
+  const statusLower = (this.overrideStatus || "").trim().toLowerCase();
+  if (statusLower === "failed" && !modifiedResult.retestDate) {
+    const rtDate = new Date();
+    rtDate.setDate(rtDate.getDate() + 7);
+    modifiedResult.retestDate = rtDate.toISOString().split('T')[0];
+  }
+
+  try {
+    if (useFirebase && db) {
+      await fb.updateDoc(fb.doc(db, "candidates", cand.id), modifiedResult);
+    } else {
+      const index = this.candidates.findIndex(item => item.id === cand.id);
+      if (index >= 0) {
+        this.candidates[index] = { ...this.candidates[index], ...modifiedResult };
+        this.saveOfflineFallback();
+      }
+    }
+
+    await this.addNotification("Result Published", `Evaluation scores published for candidate ${cand.name} (${cand.appNo}).`, "info");
+
+    alert("Result override saved and published successfully.");
+    this.route("admin-dashboard");
+  } catch (err) {
+    console.error(err);
+  }
+};
+</script>

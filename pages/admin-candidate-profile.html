@@ -194,3 +194,158 @@
     </div>
   </div>
 </div>
+
+<script>
+app.renderAdminCandidateProfile = function() {
+  const cand = this.selectedCandidate;
+  if (!cand) return;
+
+  const profileTitle = document.getElementById("admin-candidate-profile-title");
+  if (profileTitle) profileTitle.innerText = cand.name;
+
+  const profileBadge = document.getElementById("admin-candidate-profile-status");
+  if (profileBadge) {
+    const statusLower = (cand.status || "").trim().toLowerCase();
+    const badgeClass = statusLower === "passed" ? "badge-success" : statusLower === "failed" ? "badge-danger" : "badge-warning";
+    profileBadge.className = `badge ${badgeClass}`;
+    profileBadge.innerText = cand.status;
+  }
+
+  const details = [
+    ["admin-candidate-app-no", cand.appNo],
+    ["admin-candidate-dob", cand.dob],
+    ["admin-candidate-ll-no", cand.llNo],
+    ["admin-candidate-mobile", cand.mobile],
+    ["admin-candidate-email", cand.email],
+    ["admin-candidate-test-date", cand.testDate],
+    ["admin-candidate-score", `${cand.score}`],
+    ["admin-candidate-confidence", `${cand.aiConfidence}%`],
+    ["admin-candidate-eligibility", cand.eligibility],
+    ["admin-candidate-officer", cand.officerName || "Inspector K. Raghavan"],
+    ["admin-candidate-remarks", cand.officerRemarks],
+    ["admin-candidate-rating", cand.driverRating],
+    ["admin-candidate-rating-desc", cand.driverRatingDesc],
+    ["admin-candidate-retest", cand.retestDate || "Not scheduled"]
+  ];
+
+  details.forEach(([id, value]) => {
+    const el = document.getElementById(id);
+    if (el) el.innerText = value;
+  });
+
+  const strengths = document.getElementById("admin-candidate-strengths");
+  if (strengths) {
+    strengths.innerHTML = cand.strengths && cand.strengths.length
+      ? cand.strengths.map(item => `<li>${item}</li>`).join("")
+      : `<li>No strengths recorded.</li>`;
+  }
+
+  const weaknesses = document.getElementById("admin-candidate-weaknesses");
+  if (weaknesses) {
+    weaknesses.innerHTML = cand.weaknesses && cand.weaknesses.length
+      ? cand.weaknesses.map(item => `<li>${item}</li>`).join("")
+      : `<li>No weaknesses recorded.</li>`;
+  }
+
+  const violations = document.getElementById("admin-candidate-violations");
+  if (violations) {
+    violations.innerHTML = "";
+    if (!cand.violations || cand.violations.length === 0) {
+      violations.innerHTML = `<div style="padding:16px; border:1px solid var(--border-color); border-radius:var(--radius-md); color:var(--text-sub);">No violations recorded for this candidate.</div>`;
+    } else {
+      cand.violations.forEach(v => {
+        const item = document.createElement("div");
+        item.className = "violation-card-item";
+        item.innerHTML = `
+          <div class="violation-card-icon">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+          <div class="violation-card-info">
+            <div class="violation-card-title">
+              ${v.name}
+              <span>Time: 00:${String(v.time).padStart(2, "0")}</span>
+            </div>
+            <div style="font-size:0.75rem; font-weight:700; margin-bottom:4px;" class="${v.severity === 'Critical' ? 'text-danger' : 'text-warning'}">
+              Severity: ${v.severity}
+            </div>
+            <p style="font-size:0.85rem; color:var(--text-sub);">${v.description}</p>
+          </div>
+        `;
+        violations.appendChild(item);
+      });
+    }
+  }
+
+  // Populate AI assessment panel fields on profile
+  const aScore = document.getElementById("admin-candidate-assessment-score");
+  if (aScore) aScore.innerText = cand.score !== undefined ? cand.score : "-";
+
+  const aDecision = document.getElementById("admin-candidate-assessment-decision");
+  if (aDecision) {
+    const status = cand.status || "Pending";
+    const statusLower = status.trim().toLowerCase();
+    let cls = "badge-warning";
+    if (statusLower === "passed") cls = "badge-success";
+    else if (statusLower === "failed") cls = "badge-danger";
+    aDecision.className = `badge ${cls}`;
+    aDecision.innerText = status;
+  }
+
+  const aConf = document.getElementById("admin-candidate-assessment-confidence");
+  if (aConf) aConf.innerText = cand.aiConfidence ? `${cand.aiConfidence}%` : "-";
+
+  const aRemarks = document.getElementById("admin-candidate-assessment-remarks");
+  if (aRemarks) aRemarks.value = cand.officerRemarks || "";
+
+  const aViolations = document.getElementById("admin-candidate-assessment-violations");
+  if (aViolations) {
+    aViolations.innerHTML = "";
+    if (!cand.violations || cand.violations.length === 0) {
+      aViolations.innerHTML = `<div style="color:var(--text-sub);">No violations recorded.</div>`;
+    } else {
+      cand.violations.forEach(v => {
+        aViolations.innerHTML += `
+          <div style="padding:8px; border-bottom:1px dashed var(--border-color); display:flex; justify-content:space-between; align-items:center; gap:8px;">
+            <div style="font-size:0.9rem;"><strong>${v.name}</strong><div style="font-size:0.8rem; color:var(--text-muted)">Time: s${v.time} • ${v.description}</div></div>
+            <span class="badge ${v.severity === 'Critical' ? 'badge-danger' : 'badge-warning'}">${v.severity}</span>
+          </div>
+        `;
+      });
+    }
+  }
+};
+
+app.publishCandidateResult = async function(candidateId) {
+  const cand = this.candidates.find(c => c.id === candidateId);
+  if (!cand) return;
+
+  const remarksEl = document.getElementById("admin-candidate-assessment-remarks");
+  const officerRemarks = remarksEl ? remarksEl.value : cand.officerRemarks;
+
+  const modified = {
+    officerRemarks,
+    officerApproved: true,
+    officerName: cand.officerName || "Inspector K. Raghavan",
+    testDate: new Date().toISOString().split('T')[0]
+  };
+
+  try {
+    if (useFirebase && db) {
+      await fb.updateDoc(fb.doc(db, "candidates", candidateId), modified);
+    } else {
+      const idx = this.candidates.findIndex(x => x.id === candidateId);
+      if (idx >= 0) {
+        this.candidates[idx] = { ...this.candidates[idx], ...modified };
+        this.saveOfflineFallback();
+      }
+    }
+
+    await this.addNotification("Result Published", `Final result published for candidate ${cand.name} (${cand.appNo}).`, "info");
+    alert("Final result published and persisted.");
+    await this.fetchData();
+    this.renderAdminCandidateProfile();
+  } catch (err) {
+    console.error(err);
+  }
+};
+</script>

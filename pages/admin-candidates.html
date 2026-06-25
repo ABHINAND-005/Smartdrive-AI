@@ -40,3 +40,225 @@
     </table>
   </div>
 </div>
+
+<script>
+app.renderCandidatesCRUD = function() {
+  const table = document.getElementById("admin-candidates-crud-table");
+  table.innerHTML = "";
+  
+  this.candidates.forEach(c => {
+    const row = document.createElement("tr");
+    const statusLower = (c.status || "").trim().toLowerCase();
+    let badgeClass = "badge-success";
+    if (statusLower === "failed") badgeClass = "badge-danger";
+    else if (statusLower === "pending" || statusLower === "processing") badgeClass = "badge-warning";
+
+    row.innerHTML = `
+      <td><strong>${c.name}</strong></td>
+      <td style="font-family:monospace;">${c.appNo}</td>
+      <td>${c.dob}</td>
+      <td style="font-family:monospace;">${c.llNo}</td>
+      <td>${c.mobile}</td>
+      <td>${c.testDate}</td>
+      <td><span class="badge ${badgeClass}">${c.status}</span></td>
+      <td class="table-action-row">
+        <button class="table-action-btn" onclick="app.viewCandidateProfile('${c.id}')" title="View Detail"><i class="fa-solid fa-eye"></i></button>
+        <button class="table-action-btn" onclick="app.overrideAIResult('${c.id}')" title="Override decision"><i class="fa-solid fa-sliders"></i></button>
+        <button class="table-action-btn" onclick="app.openEditCandidateModal('${c.id}')" title="Edit Registry"><i class="fa-solid fa-pen-to-square"></i></button>
+        <button class="table-action-btn delete" onclick="app.deleteCandidate('${c.id}')" title="Delete Candidate"><i class="fa-solid fa-trash-can"></i></button>
+      </td>
+    `;
+    table.appendChild(row);
+  });
+};
+
+app.searchCandidates = function(val) {
+  const table = document.getElementById("admin-candidates-crud-table");
+  table.innerHTML = "";
+  const filtered = this.candidates.filter(c => 
+    c.name.toLowerCase().includes(val.toLowerCase()) || 
+    c.appNo.toLowerCase().includes(val.toLowerCase()) || 
+    c.llNo.toLowerCase().includes(val.toLowerCase())
+  );
+
+  filtered.forEach(c => {
+    const row = document.createElement("tr");
+    const statusLower = (c.status || "").trim().toLowerCase();
+    let badgeClass = "badge-success";
+    if (statusLower === "failed") badgeClass = "badge-danger";
+    else if (statusLower === "pending" || statusLower === "processing") badgeClass = "badge-warning";
+
+    row.innerHTML = `
+      <td><strong>${c.name}</strong></td>
+      <td style="font-family:monospace;">${c.appNo}</td>
+      <td>${c.dob}</td>
+      <td style="font-family:monospace;">${c.llNo}</td>
+      <td>${c.mobile}</td>
+      <td>${c.testDate}</td>
+      <td><span class="badge ${badgeClass}">${c.status}</span></td>
+      <td class="table-action-row">
+        <button class="table-action-btn" onclick="app.viewCandidateProfile('${c.id}')" title="View detail"><i class="fa-solid fa-eye"></i></button>
+        <button class="table-action-btn" onclick="app.overrideAIResult('${c.id}')" title="Override decision"><i class="fa-solid fa-sliders"></i></button>
+        <button class="table-action-btn" onclick="app.openEditCandidateModal('${c.id}')"><i class="fa-solid fa-pen-to-square"></i></button>
+        <button class="table-action-btn delete" onclick="app.deleteCandidate('${c.id}')"><i class="fa-solid fa-trash-can"></i></button>
+      </td>
+    `;
+    table.appendChild(row);
+  });
+};
+
+app.openAddCandidateModal = function() {
+  document.getElementById("modal-candidate-title").innerText = "Register New Candidate";
+  document.getElementById("modal-candidate-id").value = "";
+  document.getElementById("cand-name").value = "";
+  document.getElementById("cand-app-no").value = "";
+  document.getElementById("cand-dob").value = "";
+  document.getElementById("cand-ll-no").value = "";
+  document.getElementById("cand-mobile").value = "";
+  document.getElementById("cand-email").value = "";
+  document.getElementById("cand-test-date").value = "";
+
+  document.getElementById("modal-add-candidate").classList.add("active");
+};
+
+app.openEditCandidateModal = function(id) {
+  const c = this.candidates.find(item => item.id === id);
+  if (!c) return;
+
+  document.getElementById("modal-candidate-title").innerText = "Edit Candidate Registry";
+  document.getElementById("modal-candidate-id").value = c.id;
+  document.getElementById("cand-name").value = c.name;
+  document.getElementById("cand-app-no").value = c.appNo;
+  document.getElementById("cand-dob").value = c.dob;
+  document.getElementById("cand-ll-no").value = c.llNo;
+  document.getElementById("cand-mobile").value = c.mobile;
+  document.getElementById("cand-email").value = c.email;
+  document.getElementById("cand-test-date").value = c.testDate;
+
+  document.getElementById("modal-add-candidate").classList.add("active");
+};
+
+app.closeCandidateModal = function() {
+  document.getElementById("modal-add-candidate").classList.remove("active");
+};
+
+app.handleSaveCandidate = async function(e) {
+  e.preventDefault();
+  const id = document.getElementById("modal-candidate-id").value;
+  const name = document.getElementById("cand-name").value.trim();
+  const appNo = document.getElementById("cand-app-no").value.trim();
+  const dob = document.getElementById("cand-dob").value;
+  const llNo = document.getElementById("cand-ll-no").value.trim();
+  const mobile = document.getElementById("cand-mobile").value.trim();
+  const email = document.getElementById("cand-email").value.trim();
+  const testDate = document.getElementById("cand-test-date").value;
+
+  // Age validation (must be 18+)
+  const birthDate = new Date(dob);
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const m = today.getMonth() - birthDate.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  if (age < 18) {
+    alert("Validation Failed: Candidate must be at least 18 years old.");
+    return;
+  }
+
+  // Driving test date validation (cannot be in the past)
+  const selectedDate = new Date(testDate);
+  const todayDateOnly = new Date();
+  todayDateOnly.setHours(0, 0, 0, 0);
+  selectedDate.setHours(0, 0, 0, 0);
+  
+  // Only enforce test date checks for new candidate registrations
+  if (!id && selectedDate < todayDateOnly) {
+    alert("Validation Failed: Driving test date cannot be in the past.");
+    return;
+  }
+
+  // Duplicate Application Number check
+  const duplicateApp = this.candidates.find(c => c.appNo === appNo && c.id !== id);
+  if (duplicateApp) {
+    alert(`Validation Failed: The Application Number "${appNo}" is already registered to candidate "${duplicateApp.name}".`);
+    return;
+  }
+
+  // Duplicate License Number check
+  const duplicateLL = this.candidates.find(c => c.llNo === llNo && c.id !== id);
+  if (duplicateLL) {
+    alert(`Validation Failed: The Learner's License Number "${llNo}" is already registered to candidate "${duplicateLL.name}".`);
+    return;
+  }
+
+  try {
+    if (useFirebase && db) {
+      if (id) {
+        const index = this.candidates.findIndex(c => c.id === id);
+        if (index >= 0) {
+          const candRef = fb.doc(db, "candidates", id);
+          await fb.updateDoc(candRef, { name, appNo, dob, llNo, mobile, email, testDate });
+        }
+      } else {
+        const newId = String(Date.now());
+        const newCandObj = {
+          id: newId, name, appNo, dob, llNo, mobile, email, testDate,
+          score: 0, aiConfidence: 0, status: "Pending", eligibility: "Not Eligible",
+          officerRemarks: "Awaiting video upload & evaluation.", officerName: "Inspector K. Raghavan",
+          officerApproved: false, driverRating: "Awaiting Evaluation", driverRatingDesc: "Please upload track telemetry.",
+          strengths: [], weaknesses: [], retestReadiness: 0, retestDate: "", violations: []
+        };
+        await fb.setDoc(fb.doc(db, "candidates", newId), newCandObj);
+      }
+    } else {
+      // Fallback
+      if (id) {
+        const index = this.candidates.findIndex(c => c.id === id);
+        if (index >= 0) {
+          this.candidates[index] = { ...this.candidates[index], name, appNo, dob, llNo, mobile, email, testDate };
+          this.saveOfflineFallback();
+        }
+      } else {
+        const newCand = {
+          id: String(Date.now()), name, appNo, dob, llNo, mobile, email, testDate,
+          score: 0, aiConfidence: 0, status: "Pending", eligibility: "Not Eligible",
+          officerRemarks: "Awaiting video upload & evaluation.", officerName: "Inspector K. Raghavan",
+          officerApproved: false, driverRating: "Awaiting Evaluation", driverRatingDesc: "Please upload track telemetry.",
+          strengths: [], weaknesses: [], retestReadiness: 0, retestDate: "", violations: []
+        };
+        this.candidates.push(newCand);
+        this.saveOfflineFallback();
+      }
+    }
+    
+    await this.fetchData();
+    this.closeCandidateModal();
+    this.renderCandidatesCRUD();
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+app.deleteCandidate = async function(id) {
+  if (confirm("Are you sure you want to delete this candidate record?")) {
+    try {
+      const c = this.candidates.find(item => item.id === id);
+      if (useFirebase && db) {
+        await fb.deleteDoc(fb.doc(db, "candidates", id));
+      } else {
+        const index = this.candidates.findIndex(item => item.id === id);
+        if (index >= 0) {
+          this.candidates.splice(index, 1);
+          this.saveOfflineFallback();
+        }
+      }
+
+      await this.fetchData();
+      this.renderCandidatesCRUD();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+};
+</script>

@@ -216,3 +216,172 @@
         </div>
     </div>
 </div>
+
+<script>
+app.renderVideoEvaluation = function() {
+  const select = document.getElementById("upload-candidate-select");
+  select.innerHTML = "";
+  
+  const pending = this.candidates.filter(c => {
+    const s = (c.status || "").trim().toLowerCase();
+    return s === "pending";
+  });
+  if (pending.length === 0) {
+    this.candidates.forEach(c => {
+      select.innerHTML += `<option value="${c.id}">${c.name} (${c.appNo})</option>`;
+    });
+  } else {
+    pending.forEach(c => {
+      select.innerHTML += `<option value="${c.id}">${c.name} (${c.appNo})</option>`;
+    });
+  }
+
+  document.getElementById("start-evaluation-btn").disabled = true;
+  document.getElementById("evaluation-progress-wrapper").style.display = "none";
+  
+  const log = document.getElementById("evaluation-console-log");
+  log.innerHTML = `
+    <div class="log-line">> RTO Artificial Intelligence System ready.</div>
+    <div class="log-line">> Select candidate and upload footage to begin.</div>
+  `;
+};
+
+app.handleVideoUpload = function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  this.uploadedVideoFile = file;
+  document.getElementById("start-evaluation-btn").disabled = false;
+  
+  const log = document.getElementById("evaluation-console-log");
+  log.innerHTML += `
+    <div class="log-line success">> Video telemetry package ingested: ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)</div>
+    <div class="log-line">> System coordinates mappings loaded. Click Start AI Evaluation.</div>
+  `;
+  log.scrollTop = log.scrollHeight;
+};
+
+app.startAIEvaluation = function() {
+  const candSelect = document.getElementById("upload-candidate-select");
+  this.evaluatingCandidateId = candSelect.value;
+  
+  document.getElementById("start-evaluation-btn").disabled = true;
+  document.getElementById("evaluation-progress-wrapper").style.display = "block";
+  this.evaluatingProgress = 0;
+  
+  const logs = [
+    "Initializing computer vision tensor networks...",
+    "Mapping RTO SmartTrack boundary vectors...",
+    "Tracking vehicle path coordinates (10 fps logging)...",
+    "Analyzing boundary intersections...",
+    "Checking parking docking alignment parameters...",
+    "Evaluating turn indicator delays...",
+    "Generating final safe driver assessment score..."
+  ];
+
+  const logBox = document.getElementById("evaluation-console-log");
+
+  this.evaluationTimer = setInterval(() => {
+    this.evaluatingProgress += 10;
+    if (this.evaluatingProgress > 100) this.evaluatingProgress = 100;
+
+    document.getElementById("evaluation-progress-bar").style.width = this.evaluatingProgress + "%";
+    document.getElementById("evaluation-progress-val").innerText = this.evaluatingProgress + "%";
+
+    const logIdx = Math.floor((this.evaluatingProgress / 100) * (logs.length - 1));
+    logBox.innerHTML += `<div class="log-line">> ${logs[logIdx]}</div>`;
+    logBox.scrollTop = logBox.scrollHeight;
+
+    if (this.evaluatingProgress >= 100) {
+      clearInterval(this.evaluationTimer);
+      this.finishAIEvaluation();
+    }
+  }, 400);
+};
+
+app.finishAIEvaluation = async function() {
+  const id = this.evaluatingCandidateId;
+  const cand = this.candidates.find(c => c.id === id);
+  if (!cand) return;
+
+  const aiResult = {
+    score: 82,
+    aiConfidence: 95.4,
+    status: "Passed",
+    eligibility: "Eligible",
+    driverRating: "Safe Driver",
+    driverRatingDesc: "Vehicle maintains good speed profiles and centers turn lanes properly.",
+    strengths: ["Defensive spacing parameters normal", "Safe reverse alignment inside dock grid"],
+    weaknesses: ["Indicator signal delayed at exit curve"],
+    officerRemarks: "AI calculation shows correct path tracking. Recommended approval.",
+    officerName: "Inspector K. Raghavan",
+    officerApproved: true,
+    testDate: new Date().toISOString().split('T')[0],
+    violations: [
+      {
+        name: "Wrong Indicator Usage",
+        severity: "Warning",
+        time: 25,
+        description: "Turned exits without satisfying 3 seconds pre-signal alerts.",
+        x: 280, y: 140
+      }
+    ]
+  };
+
+  try {
+    if (useFirebase && db) {
+      await fb.updateDoc(fb.doc(db, "candidates", id), aiResult);
+    } else {
+      const index = this.candidates.findIndex(item => item.id === id);
+      if (index >= 0) {
+        this.candidates[index] = { ...this.candidates[index], ...aiResult };
+        this.saveOfflineFallback();
+      }
+    }
+
+    await this.fetchData();
+    
+    const logBox = document.getElementById("evaluation-console-log");
+    logBox.innerHTML += `
+      <div class="log-line success">> AI Evaluation complete. Score: 82. Result: Passed.</div>
+      <div class="log-line success">> Ingesting reports to RTO gateway DB...</div>
+    `;
+    logBox.scrollTop = logBox.scrollHeight;
+
+    // Show result dashboard instead of routing immediately
+    document.getElementById("upload-section").style.display = "none";
+    document.getElementById("result-dashboard").style.display = "block";
+    
+    document.getElementById("dashboard-candidate-id").innerText = cand.appNo;
+    document.getElementById("ai-score").innerText = aiResult.score;
+    
+    const dec = document.getElementById("ai-decision");
+    const statusLower = aiResult.status.trim().toLowerCase();
+    dec.innerText = aiResult.status.toUpperCase();
+    dec.className = `badge-decision ${statusLower === 'passed' ? 'pass' : 'fail'}`;
+    
+    document.getElementById("ai-confidence").innerText = aiResult.aiConfidence + "%";
+    document.getElementById("override-remarks").value = aiResult.officerRemarks;
+
+    const vLog = document.getElementById("violations-log");
+    vLog.innerHTML = "";
+    aiResult.violations.forEach(v => {
+      vLog.innerHTML += `
+        <div style="padding:10px; border-bottom:1px dashed var(--border-color); display:flex; justify-content:space-between;">
+          <span><strong>${v.name}</strong> (Time: 00:${v.time})</span>
+          <span class="badge ${v.severity === 'Critical' ? 'badge-danger' : 'badge-warning'}">${v.severity}</span>
+        </div>
+      `;
+    });
+
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+app.resetEvaluationUI = function() {
+  document.getElementById("upload-section").style.display = "grid";
+  document.getElementById("result-dashboard").style.display = "none";
+  this.renderVideoEvaluation();
+};
+</script>

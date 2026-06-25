@@ -77,3 +77,45 @@
   </div>
 
 </div>
+
+<script>
+app.renderAdminDashboard = function() {
+  const total = this.candidates.length;
+  const passed = this.candidates.filter(c => (c.status || "").trim().toLowerCase() === "passed").length;
+  const failed = this.candidates.filter(c => (c.status || "").trim().toLowerCase() === "failed").length;
+  const pending = this.candidates.filter(c => {
+    const s = (c.status || "").trim().toLowerCase();
+    return s === "pending" || s === "processing";
+  }).length;
+
+  document.getElementById("admin-stat-total").innerText = total;
+  document.getElementById("admin-stat-passed").innerText = passed;
+  document.getElementById("admin-stat-failed").innerText = failed;
+  document.getElementById("admin-stat-pending").innerText = pending;
+
+  const tbody = document.getElementById("admin-dashboard-recent-table");
+  tbody.innerHTML = "";
+  
+  const sorted = [...this.candidates].reverse().slice(0, 5);
+  sorted.forEach(c => {
+    const row = document.createElement("tr");
+    const statusLower = (c.status || "").trim().toLowerCase();
+    let badgeClass = "badge-success";
+    if (statusLower === "failed") badgeClass = "badge-danger";
+    else if (statusLower === "pending" || statusLower === "processing") badgeClass = "badge-warning";
+
+    row.innerHTML = `
+      <td><strong>${c.name}</strong></td>
+      <td style="font-family:monospace;">${c.appNo}</td>
+      <td>${c.testDate}</td>
+      <td><strong>${c.score}</strong></td>
+      <td><span class="badge ${badgeClass}">${c.status}</span></td>
+      <td class="table-action-row">
+        <button class="table-action-btn" onclick="app.viewCandidateProfile('${c.id}')" title="View details"><i class="fa-solid fa-eye"></i></button>
+        <button class="table-action-btn" onclick="app.overrideAIResult('${c.id}')" title="Override decision"><i class="fa-solid fa-sliders"></i></button>
+      </td>
+    `;
+    tbody.appendChild(row);
+  });
+};
+</script>

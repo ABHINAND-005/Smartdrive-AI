@@ -61,16 +61,16 @@
     <form onsubmit="event.preventDefault();">
       <div class="form-group" id="profile-name-group">
         <label>Full Name</label>
-        <input type="text" id="profile-edit-name" class="form-control" readonly value="Abhinand S">
+        <input type="text" id="profile-edit-name" class="form-control" readonly value="">
       </div>
       <div class="settings-grid-2">
         <div class="form-group" id="profile-mobile-group">
           <label>Mobile Number</label>
-          <input type="text" id="profile-edit-mobile" class="form-control" readonly value="+91 9447201045">
+          <input type="text" id="profile-edit-mobile" class="form-control" readonly value="">
         </div>
         <div class="form-group">
           <label>Email Address</label>
-          <input type="email" id="profile-edit-email" class="form-control" readonly value="abhinand.s@gmail.com">
+          <input type="email" id="profile-edit-email" class="form-control" readonly value="">
         </div>
       </div>
     </form>
@@ -113,3 +113,24 @@
   </div>
 
 </div>
+
+<script>
+app.renderProfileSettings = function() {
+  const user = this.currentUser;
+  const isCand = this.currentRole === "candidate";
+  
+  const nameGroup = document.getElementById("profile-name-group");
+  const mobileGroup = document.getElementById("profile-mobile-group");
+  
+  if (isCand) {
+    if (nameGroup) nameGroup.style.display = "block";
+    if (mobileGroup) mobileGroup.style.display = "block";
+    document.getElementById("profile-edit-name").value = user.name;
+    document.getElementById("profile-edit-mobile").value = user.mobile || "";
+  } else {
+    if (nameGroup) nameGroup.style.display = "none";
+    if (mobileGroup) mobileGroup.style.display = "none";
+  }
+  document.getElementById("profile-edit-email").value = user.email || "";
+};
+</script>

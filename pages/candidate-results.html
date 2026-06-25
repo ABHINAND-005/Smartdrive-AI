@@ -162,3 +162,63 @@
   </div>
 
 </div>
+
+<script>
+app.renderCandidateResults = function() {
+  const user = this.currentUser;
+  
+  const statusStamp = document.getElementById("res-status-stamp");
+  statusStamp.innerText = user.status;
+  
+  const statusLower = (user.status || "").trim().toLowerCase();
+  statusStamp.className = `badge ${statusLower === 'passed' ? 'badge-success' : 'badge-danger'}`;
+
+  document.getElementById("res-score-val").innerText = user.score;
+  document.getElementById("res-confidence-val").innerText = user.aiConfidence + "%";
+  document.getElementById("res-evaluation-date").innerText = user.testDate;
+  document.getElementById("res-officer-remarks").innerText = user.officerRemarks;
+  document.getElementById("res-officer-name").innerText = user.officerName || "Inspector K. Raghavan";
+  
+  const approvalBadge = document.getElementById("res-approval-badge");
+  approvalBadge.className = `badge ${user.officerApproved ? 'badge-success' : 'badge-warning'}`;
+  approvalBadge.innerText = user.officerApproved ? "Approved" : "Pending Approval";
+
+  const vListCount = document.getElementById("res-violation-count");
+  vListCount.innerText = user.violations.length === 1 ? "1 Violation" : `${user.violations.length} Violations`;
+  vListCount.className = `badge ${user.violations.length > 0 ? 'badge-danger' : 'badge-success'}`;
+
+  const list = document.getElementById("results-violations-list");
+  list.innerHTML = "";
+  if (user.violations.length === 0) {
+    list.innerHTML = `
+      <div style="text-align:center; padding:40px; color:var(--text-muted); background:var(--bg-main); border-radius:var(--radius-md);">
+        <i class="fa-solid fa-circle-check text-success" style="font-size:3rem; margin-bottom:12px;"></i>
+        <h4>Zero Violations Logged</h4>
+        <p style="font-size:0.85rem; margin-top:4px;">Excellent boundary control and signalling disciplines observed.</p>
+      </div>
+    `;
+    return;
+  }
+
+  user.violations.forEach(v => {
+    const card = document.createElement("div");
+    card.className = `violation-card-item severity-${(v.severity || "").toLowerCase()}`;
+    card.innerHTML = `
+      <div class="violation-card-icon">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <div class="violation-card-info">
+        <div class="violation-card-title">
+          ${v.name}
+          <span>Time: 00:${v.time.toString().padStart(2, '0')}</span>
+        </div>
+        <div style="font-size:0.75rem; font-weight:700; margin-bottom:4px;" class="${v.severity === 'Critical' ? 'text-danger' : 'text-warning'}">
+          Severity: ${v.severity}
+        </div>
+        <p style="font-size:0.85rem; color:var(--text-sub);">${v.description}</p>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+};
+</script>

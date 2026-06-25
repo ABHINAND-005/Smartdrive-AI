@@ -215,14 +215,6 @@ class SmartDriveApp {
         });
         this.candidates.sort((a, b) => Number(b.id) - Number(a.id));
 
-        if (this.candidates.length === 0) {
-          const seedPromises = BACKUP_CANDIDATES.map(c => 
-            fb.setDoc(fb.doc(db, "candidates", c.id), c)
-          );
-          await Promise.all(seedPromises);
-          this.candidates = BACKUP_CANDIDATES;
-        }
-
         this.notifications = [];
         notifySnap.forEach(d => {
           this.notifications.push({ id: d.id, ...d.data() });
@@ -244,14 +236,8 @@ class SmartDriveApp {
   }
 
   loadOfflineFallback() {
-    const cachedCand = localStorage.getItem("sd_firebase_fallback_candidates");
-    if (cachedCand) {
-      this.candidates = JSON.parse(cachedCand);
-    } else {
-      this.candidates = BACKUP_CANDIDATES;
-      localStorage.setItem("sd_firebase_fallback_candidates", JSON.stringify(this.candidates));
-    }
-    this.candidates.sort((a, b) => Number(b.id) - Number(a.id));
+    this.candidates = [];
+    localStorage.removeItem("sd_firebase_fallback_candidates");
 
     const cachedNotify = localStorage.getItem("sd_firebase_fallback_notify");
     if (cachedNotify) {
@@ -263,7 +249,6 @@ class SmartDriveApp {
   }
 
   saveOfflineFallback() {
-    localStorage.setItem("sd_firebase_fallback_candidates", JSON.stringify(this.candidates));
     localStorage.setItem("sd_firebase_fallback_notify", JSON.stringify(this.notifications));
   }
 
@@ -420,7 +405,7 @@ class SmartDriveApp {
       this.showScreen("app-layout");
       this.route("admin-dashboard");
     } else {
-      alert("Invalid credentials. Hint: use rto.officer.01 and rto123.");
+      alert("Invalid credentials.");
     }
   }
 
@@ -451,7 +436,7 @@ class SmartDriveApp {
     this.currentRole = null;
     localStorage.removeItem("sd_current_user");
     localStorage.removeItem("sd_current_role");
-    this.showScreen("screen-landing");
+    window.location.reload();
   }
 
   // NOTIFICATION DRAWER
@@ -548,10 +533,11 @@ class SmartDriveApp {
     const statusBg = document.getElementById("db-status-bg");
     const eligBg = document.getElementById("db-eligibility-bg");
     
-    if (user.status === "Passed") {
+    const statusLower = (user.status || "").trim().toLowerCase();
+    if (statusLower === "passed") {
       statusBg.className = "stat-icon bg-success-light";
       statusBg.innerHTML = `<i class="fa-solid fa-circle-check"></i>`;
-    } else if (user.status === "Failed") {
+    } else if (statusLower === "failed") {
       statusBg.className = "stat-icon bg-danger-light";
       statusBg.innerHTML = `<i class="fa-solid fa-circle-xmark"></i>`;
     } else {
@@ -569,7 +555,7 @@ class SmartDriveApp {
     const offset = circumference - ((user.score || 0) / 100) * circumference;
     const scoreCircleBar = document.getElementById("score-circle-bar");
     scoreCircleBar.style.strokeDashoffset = offset;
-    scoreCircleBar.style.stroke = user.status === "Passed" ? "var(--success)" : "var(--danger)";
+    scoreCircleBar.style.stroke = statusLower === "passed" ? "var(--success)" : "var(--danger)";
   }
 
   // CANDIDATE RESULTS SCREEN
@@ -578,7 +564,8 @@ class SmartDriveApp {
     
     const statusStamp = document.getElementById("res-status-stamp");
     statusStamp.innerText = user.status;
-    statusStamp.className = `badge ${user.status === 'Passed' ? 'badge-success' : 'badge-danger'}`;
+    const statusLower = (user.status || "").trim().toLowerCase();
+    statusStamp.className = `badge ${statusLower === 'passed' ? 'badge-success' : 'badge-danger'}`;
 
     document.getElementById("res-score-val").innerText = user.score;
     document.getElementById("res-confidence-val").innerText = (user.aiConfidence || 0) + "%";
@@ -638,10 +625,11 @@ class SmartDriveApp {
     
     const statusText = document.getElementById("cert-status");
 
-    if (user.status === "Passed") {
+    const statusLower = (user.status || "").trim().toLowerCase();
+    if (statusLower === "passed") {
       statusText.innerText = "APPROVED FOR LICENSE";
       statusText.style.color = "var(--success)";
-    } else if (user.status === "Failed") {
+    } else if (statusLower === "failed") {
       statusText.innerText = "NOT ELIGIBLE (FAILED)";
       statusText.style.color = "var(--danger)";
     } else {
@@ -676,9 +664,12 @@ class SmartDriveApp {
   // ADMIN PORTAL - STATISTICS & RECENT TABLE
   renderAdminDashboard() {
     const total = this.candidates.length;
-    const passed = this.candidates.filter(c => c.status === "Passed").length;
-    const failed = this.candidates.filter(c => c.status === "Failed").length;
-    const pending = this.candidates.filter(c => c.status === "Pending" || c.status === "Processing").length;
+    const passed = this.candidates.filter(c => (c.status || "").trim().toLowerCase() === "passed").length;
+    const failed = this.candidates.filter(c => (c.status || "").trim().toLowerCase() === "failed").length;
+    const pending = this.candidates.filter(c => {
+      const s = (c.status || "").trim().toLowerCase();
+      return s === "pending" || s === "processing";
+    }).length;
 
     document.getElementById("admin-stat-total").innerText = total;
     document.getElementById("admin-stat-passed").innerText = passed;
@@ -692,9 +683,10 @@ class SmartDriveApp {
     const sorted = [...this.candidates].reverse().slice(0, 5);
     sorted.forEach(c => {
       const row = document.createElement("tr");
+      const statusLower = (c.status || "").trim().toLowerCase();
       let badgeClass = "badge-success";
-      if (c.status === "Failed") badgeClass = "badge-danger";
-      else if (c.status === "Pending" || c.status === "Processing") badgeClass = "badge-warning";
+      if (statusLower === "failed") badgeClass = "badge-danger";
+      else if (statusLower === "pending" || statusLower === "processing") badgeClass = "badge-warning";
 
       row.innerHTML = `
         <td><strong>${c.name}</strong></td>
@@ -1037,7 +1029,8 @@ class SmartDriveApp {
 
     const profileBadge = document.getElementById("admin-candidate-profile-status");
     if (profileBadge) {
-      const badgeClass = cand.status === "Passed" ? "badge-success" : cand.status === "Failed" ? "badge-danger" : "badge-warning";
+      const statusLower = (cand.status || "").trim().toLowerCase();
+      const badgeClass = statusLower === "passed" ? "badge-success" : statusLower === "failed" ? "badge-danger" : "badge-warning";
       profileBadge.className = `badge ${badgeClass}`;
       profileBadge.innerText = cand.status;
     }
@@ -1113,9 +1106,10 @@ class SmartDriveApp {
     const aDecision = document.getElementById("admin-candidate-assessment-decision");
     if (aDecision) {
       const status = cand.status || "Pending";
+      const statusLower = status.trim().toLowerCase();
       let cls = "badge-warning";
-      if (status === "Passed") cls = "badge-success";
-      else if (status === "Failed") cls = "badge-danger";
+      if (statusLower === "passed") cls = "badge-success";
+      else if (statusLower === "failed") cls = "badge-danger";
       aDecision.className = `badge ${cls}`;
       aDecision.innerText = status;
     }
@@ -1323,7 +1317,7 @@ class SmartDriveApp {
         }
 
     } catch (error) {
-        logBox.innerHTML += `<div class="log-line error">> Connection Error: Ensure app.py is running on port 3000 in your terminal!</div>`;
+        logBox.innerHTML += `<div class="log-line error">> Connection Error: Ensure app.py is running on port 5000 in your terminal!</div>`;
         logBox.scrollTop = logBox.scrollHeight;
         console.error("Local PyTorch Fetch Error:", error);
     } finally {
@@ -1365,7 +1359,11 @@ class SmartDriveApp {
     document.getElementById("override-candidate-badge").innerText = cand.appNo;
     document.getElementById("override-ai-score").innerText = cand.score;
     document.getElementById("override-ai-decision").innerText = cand.status;
-    document.getElementById("override-ai-decision").className = `badge ${cand.status === 'Passed' ? 'badge-success' : 'badge-danger'}`;
+    const statusLower = (cand.status || "").trim().toLowerCase();
+    let badgeClass = "badge-success";
+    if (statusLower === "failed") badgeClass = "badge-danger";
+    else if (statusLower === "pending" || statusLower === "processing") badgeClass = "badge-warning";
+    document.getElementById("override-ai-decision").className = `badge ${badgeClass}`;
     document.getElementById("override-ai-confidence").innerText = (cand.aiConfidence || 0) + "%";
     document.getElementById("override-remarks").value = cand.officerRemarks;
     
@@ -1493,7 +1491,6 @@ class SmartDriveApp {
     }
   }
 
-  // ANALYTICS & HISTOGRAM CHARTS
   renderAnalyticsCharts() {
     if (this.charts.passrate) this.charts.passrate.destroy();
 
